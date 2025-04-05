@@ -70,8 +70,9 @@ int addition(int a, int b) {
 
 ```
 
+- manual type casting is mandatory
+
 # Ideas
 - optional ";"
 - M: ";" crashes program
 - +=
-- objects? (no classes, just factories)
