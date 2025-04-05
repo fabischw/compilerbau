@@ -1,8 +1,6 @@
 # Name: think
 
 
-# Concept
-
 # Code Example
 ```
 
@@ -17,7 +15,7 @@ char letter = 'k'
 const float pi = 3.1415;
 
 
-# Comment
+# comment
 
 int add = 5 + 4
 float mult = pi * 5
@@ -46,7 +44,7 @@ while (a > 0) {
     a--
 }
 
-# standart library
+# standard library
 
 print("string")
 error("error name")
@@ -65,6 +63,3 @@ int addition(int a, int b) {
 - optional ";"
 - M: ";" crashes program
 - +=
-- assert 
-- raise 
-- 
