@@ -44,11 +44,22 @@ while (a > 0) {
     a--
 }
 
+# arrays
+int[10] prims = [3, 5, 7]
+int[3] = 11
+
+
 # standard library
 
 print("string")
 error("error name")
 input("query string")
+
+int(any)
+float(any)
+str(any)
+char(any)
+bool(any)
 
 
 # function definition (optional)
@@ -63,3 +74,4 @@ int addition(int a, int b) {
 - optional ";"
 - M: ";" crashes program
 - +=
+- objects? (no classes, just factories)
