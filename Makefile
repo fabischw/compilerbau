@@ -20,4 +20,4 @@ $(OUT_DIR)/grammar.tab.c: | $(OUT_DIR)
 
 # CLEAN
 clean: 
-	rm -r $(OUT_DIR)
+	rm $(OUT_DIR)/*
