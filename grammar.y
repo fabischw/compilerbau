@@ -43,7 +43,7 @@ condition_declaration:
 	| CONDITION_IF '(' logical_expr ')' '{' body '}' CONDITION_ELIF '(' logical_expr ')' '{' body '}'
 	| CONDITION_IF '(' logical_expr ')' '{' body '}' CONDITION_ELIF '(' logical_expr ')' '{' body '}' CONDITION_ELSE '{' body '}'
 	;
-	/* add elif  + elif else */
+	/* TODO: allow recursive elifs */
 
 variable_declaration:
 	datatype IDENTIFIER '=' expression
@@ -51,7 +51,8 @@ variable_declaration:
 	| datatype '[' INTEGER ']' IDENTIFIER '=' expression
 	| CONSTANT '[' INTEGER ']' IDENTIFIER '=' expression
 	;
-/* const only comptime stuff */
+	
+	/* TODO: allow only compiletime expressions for const values */
 
 expression:
 	data_expr
