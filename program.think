@@ -18,6 +18,7 @@ float mult = pi * 5
 float div = pi / 2.5
 float exp = 5^2
 int mod = 10 % 2
+float test = -3.3
 
 int test = 5 + 7 * 4
 
