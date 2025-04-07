@@ -1,0 +1,45 @@
+int a = 7
+float x = 2.3
+bool flag = True
+str mystring = "hello world"
+
+char letter = 'k'
+
+
+const float pi = 3.1415
+
+# comment
+
+int add = 5 + 4
+
+float mult = pi * 5
+float div = pi / 2.5
+float exp = 5^2
+int mod = 10 % 2
+
+int test = 5 + 7 * 4
+
+#int compound = (5 + 7) * 4 * 8
+int compound = (5 + 7) * 4 * 8
+
+bool logic = (True || False) && flag && !flag
+
+if (flag) {
+	a = a + 7
+} elif (logic) {
+	a = a + 8
+} else {
+	#  print(mystring)
+}
+
+while(a > 0) {
+	if (a > 10) { a = 10}
+	elif ( a > 20) { a = -1 }
+}
+
+# a-- --a nicht supported
+
+# arrays
+
+int[10] prims = [3, 5, 7]
+prims[3] = 11
