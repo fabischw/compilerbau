@@ -56,7 +56,7 @@ alpha [a-zA-Z]
 "!" return ('!');
 ";" return (';');
 
-[\n]    { yylineno++; }
+[\n]    { yylineno++; return (NEWLINE);}
 #[^\n]* ;
 [ \t] ;
 . {yyerror("unknown symbol"); };

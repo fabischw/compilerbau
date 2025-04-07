@@ -1,7 +1,7 @@
 # example program
 
 int a = 7
-float x = 2.3
+float x = 2.3;
 bool flag = True
 str mystring = "hello world"
 
@@ -25,6 +25,10 @@ int test = 5 + 7 * 4
 #int compound = (5 + 7) * 4 * 8
 int compound = (5 + 7) * 4 * 8
 
+a = True || False
+b = !flag
+c = (a && b)  
+
 bool logic = (True || False) && flag && !flag
 
 if (flag) {
@@ -40,9 +44,18 @@ while(a > 0) {
 	elif ( a > 20) { a = -1 }
 }
 
+while ( a < 0 ) {
+	if (a) {} else {} 
+}
+while ( a < 0 )
+ {
+	if (a) {} else {} 
+}
+
 # a-- --a not supported
 
 # arrays
+
 
 int[10] prims = [3, 5, 7]
 prims[3] = 11
