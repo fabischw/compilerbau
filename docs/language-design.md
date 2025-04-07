@@ -1,4 +1,6 @@
-# Name: think
+# Language Specification: 
+name: "think"
+file extension: ".think"
 
 
 # Code Example
@@ -12,7 +14,7 @@ str mystring = "hello world"
 
 char letter = 'k'
 
-const float pi = 3.1415;
+const float pi = 3.1415
 
 
 # comment
@@ -36,9 +38,8 @@ if (flag) {
     print(mystring)
 }
 
-
 while (a > 0) {
-    print(a)
+    print(int(a))   # typecast necessary here, no implicit type casts
     if (a > 10) { break }
     elif (a > 20) { continue }
     a--
@@ -46,7 +47,7 @@ while (a > 0) {
 
 # arrays
 int[10] prims = [3, 5, 7]
-int[3] = 11
+prims[3] = 11
 
 
 # standard library
@@ -62,6 +63,10 @@ char(any)
 bool(any)
 
 
+# Multiple statements per line
+print("first"); print("second")
+
+
 # function definition (optional)
 
 int addition(int a, int b) {
@@ -74,5 +79,4 @@ int addition(int a, int b) {
 
 # Ideas
 - optional ";"
-- M: ";" crashes program
-- +=
+- "+=" and "++"
