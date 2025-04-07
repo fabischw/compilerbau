@@ -1,3 +1,5 @@
+# example program
+
 int a = 7
 float x = 2.3
 bool flag = True
@@ -29,7 +31,7 @@ if (flag) {
 } elif (logic) {
 	a = a + 8
 } else {
-	#  print(mystring)
+	# print(mystring)
 }
 
 while(a > 0) {
@@ -37,7 +39,7 @@ while(a > 0) {
 	elif ( a > 20) { a = -1 }
 }
 
-# a-- --a nicht supported
+# a-- --a not supported
 
 # arrays
 
