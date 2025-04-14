@@ -87,7 +87,11 @@ expression:
 	| arr_expr
 	| function_call_expr
 	| IDENTIFIER
+	| indexing_expr
 	;
+
+indexing_expr:
+	expression '[' expression ']'
 
 arr_expr:
 	'[' arr_body ']'
