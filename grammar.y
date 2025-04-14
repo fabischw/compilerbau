@@ -29,9 +29,12 @@ body:
 	| NEWLINE body
 	| statement
 	;
+// note: body can be empty
+
 
 statement:
-	variable_modification
+	expression
+	| variable_modification
 	| condition_head
 	| loop_declaration
 	;
@@ -45,13 +48,13 @@ loop_declaration:
 	WHILE '(' expression ')' optional_newline '{' body '}'
 
 condition_head:
-	CONDITION_IF '(' logical_expr ')' optional_newline '{' body '}' condition_body
+	CONDITION_IF '(' expression ')' optional_newline '{' body '}' condition_body
 	;
 
 condition_body:
 	| condition_tail
 	| NEWLINE condition_body
-	| CONDITION_ELIF '(' logical_expr ')' optional_newline '{' body '}' condition_body
+	| CONDITION_ELIF '(' expression ')' optional_newline '{' body '}' condition_body
 
 condition_tail:
 	CONDITION_ELSE optional_newline '{' body '}'
@@ -77,11 +80,13 @@ assignment_operator:
 	;
 
 expression:
-	data_expr
-	| '(' expression ')'
+	'(' expression ')'
+	| data_expr
 	| math_expr
 	| logical_expr
 	| arr_expr
+	| function_call_expr
+	| IDENTIFIER
 	;
 
 arr_expr:
@@ -89,32 +94,39 @@ arr_expr:
 	;
 
 arr_body:
-	data_expr
-	| data_expr ',' arr_body
+	| expression
+	| arr_body ',' expression
 
+// literally defined data
 data_expr:
 	INTEGER
 	| FLOAT
 	| BOOLEAN
 	| STRING
 	| CHARACTER
-	| IDENTIFIER
 	;
 
+function_call_expr:
+	IDENTIFIER '(' parameter_list ')'
+	| IDENTIFIER '(' ')'
+	;
+
+parameter_list:
+	expression
+	| parameter_list ',' expression
+	;
+// can be empty
+
+	
 math_expr:
-	data_expr
-	| '-' data_expr
-	| math_expr operation math_expr
-	| '(' math_expr ')'
+	expression arithmetic_operator expression
+	| '-' expression
 	;
 
 logical_expr:
-	data_expr
-	| '!' logical_expr
-	| math_expr comparator math_expr
-	| logical_expr logical_operation logical_expr
-	| '(' logical_expr logical_operation logical_expr ')'
-	| '(' logical_expr ')'
+	expression logical_operator expression
+	| expression comparator expression
+	| '!' expression
 	;
 
 comparator:
@@ -125,12 +137,12 @@ comparator:
 	| '>'
 	;
 	
-logical_operation:
+logical_operator:
 	AND
 	| OR
 	;
 
-operation:
+arithmetic_operator:
 	'+'
 	| '-'
 	| '*'

@@ -4,3 +4,4 @@ grammar.tab.h
 lex.yy.c
 think
 temp/
+.vscode/
