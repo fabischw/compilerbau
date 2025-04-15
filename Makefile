@@ -1,5 +1,9 @@
 OUT_DIR := build
 
+ifeq ($(VERBOSE),1)
+  BISONFLAGS = -v
+endif
+
 all: $(OUT_DIR)/think
 
 # CREATE OUTPUT DIR
@@ -16,7 +20,7 @@ $(OUT_DIR)/lex.yy.c: $(OUT_DIR)/grammar.tab.c lexxer.l | $(OUT_DIR)
 
 # BISON
 $(OUT_DIR)/grammar.tab.c: | $(OUT_DIR)
-	bison -d -o $(OUT_DIR)/grammar.tab.c grammar.y
+	bison -d $(BISONFLAGS) -o $(OUT_DIR)/grammar.tab.c grammar.y
 
 # CLEAN
 clean: 
