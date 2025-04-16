@@ -35,8 +35,13 @@ alpha [a-zA-Z]
 "||" return (OR);
 "&&" return (AND);
 "==" return (IS_EQUAL);
+"!=" return (NOT_EQUAL);
 "<=" return (LESS_EQUAL);
 ">=" return (GREATER_EQUAL);
+"+=" return (PLUS_EQUAL);
+"-=" return (MINUS_EQUAL);
+"*=" return (MUL_EQUAL);
+"/=" return (DIV_EQUAL);
 "=" return ('=');
 "<" return ('<');
 ">" return ('>');

@@ -14,9 +14,21 @@
 %token OR AND
 %token CONDITION_IF CONDITION_ELIF CONDITION_ELSE
 %token WHILE
-%token LESS_EQUAL GREATER_EQUAL IS_EQUAL
+%token LESS_EQUAL GREATER_EQUAL IS_EQUAL NOT_EQUAL
 %token NEWLINE
 %token PLUS_EQUAL MINUS_EQUAL MUL_EQUAL DIV_EQUAL
+
+%left OR
+%left AND
+%nonassoc IS_EQUAL NOT_EQUAL
+%nonassoc LESS_EQUAL GREATER_EQUAL '<' '>'
+
+%left '+' '-'
+%left '*' '/' '%'
+%right '^'
+
+%nonassoc UNOT 
+%nonassoc UMINUS
 
 %%
 
@@ -124,17 +136,18 @@ parameter_list:
 	
 math_expr:
 	expression arithmetic_operator expression
-	| '-' expression
+	| '-' expression %prec UMINUS
 	;
 
 logical_expr:
 	expression logical_operator expression
 	| expression comparator expression
-	| '!' expression
+	| '!' expression %prec UNOT
 	;
 
 comparator:
 	IS_EQUAL
+	| NOT_EQUAL
 	| LESS_EQUAL
 	| GREATER_EQUAL
 	| '<'
