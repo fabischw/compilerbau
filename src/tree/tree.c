@@ -7,17 +7,17 @@ typedef struct _node
   struct _node* leftNode;
   struct _node* rightNode;
 
-  int value;
+  char* token;
   
 } Node;
 
 Node*
-create_node(int value)
+create_node(char* token)
 {
   Node* node = malloc(sizeof(Node));  
   node->leftNode = NULL;
   node->rightNode = NULL;
-  node->value = value;
+  node->token = token;
   return node;
 }
 
@@ -36,6 +36,6 @@ traverse(Node* root)
 {
   if(root == NULL) return;
   traverse(root->leftNode);
-  printf("%d\n", root->value);
+  printf("%s\n", root->token);
   traverse(root->rightNode);
 }

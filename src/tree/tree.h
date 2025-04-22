@@ -4,7 +4,7 @@
  
   #include "tree.c"
 
-  Node* create_node(int value);
+  Node* create_node(char* token);
   void free_node(Node** node);
   void traverse(Node* root);
 
