@@ -1,4 +1,5 @@
 OUT_DIR := build
+SRC_DIR := src
 
 ifeq ($(VERBOSE),1)
   BISONFLAGS = -v
@@ -15,12 +16,12 @@ $(OUT_DIR)/think: $(OUT_DIR)/lex.yy.c
 	gcc $(OUT_DIR)/lex.yy.c $(OUT_DIR)/grammar.tab.c -o $(OUT_DIR)/think
 
 # LEX
-$(OUT_DIR)/lex.yy.c: $(OUT_DIR)/grammar.tab.c lexxer.l | $(OUT_DIR) 
-	flex -o $(OUT_DIR)/lex.yy.c lexxer.l
+$(OUT_DIR)/lex.yy.c: $(OUT_DIR)/grammar.tab.c $(SRC_DIR)/lexxer.l | $(OUT_DIR) 
+	flex -o $(OUT_DIR)/lex.yy.c $(SRC_DIR)/lexxer.l
 
 # BISON
-$(OUT_DIR)/grammar.tab.c: | $(OUT_DIR)
-	bison -d $(BISONFLAGS) -o $(OUT_DIR)/grammar.tab.c grammar.y
+$(OUT_DIR)/grammar.tab.c: $(SRC_DIR)/grammar.y | $(OUT_DIR)
+	bison -d $(BISONFLAGS) -o $(OUT_DIR)/grammar.tab.c $(SRC_DIR)/grammar.y
 
 # CLEAN
 clean: 
