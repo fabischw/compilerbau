@@ -7,6 +7,10 @@
 	extern int yylex();
 %}
 
+%union {
+	struct Node node;
+}
+
 %token TYPE_INT TYPE_FLOAT TYPE_BOOL TYPE_STR TYPE_CHAR 
 %token CONSTANT
 %token IDENTIFIER
