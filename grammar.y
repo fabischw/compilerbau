@@ -1,5 +1,6 @@
 %{
 	#include<stdio.h>
+	#include "../src/tree/tree.h"
 	
 	extern FILE* yyin;
 	extern int yylineno; 
