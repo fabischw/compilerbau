@@ -23,6 +23,7 @@ dataType* create_dataType(char* id_name, char* data_type, char* type, int line_n
     dt->data_type = strdup(data_type);
     dt->type = strdup(type);
     dt->line_no = line_no;
+    return dt;
     
 }
 
@@ -54,7 +55,6 @@ void add_value(Node* linked_list, dataType* value) {
 Node* get_last_node(Node* linked_list) {
     Node* current = linked_list;
     while (current != NULL) {
-        free_node(current);
         current = current->next;
     }
     return current;
@@ -102,3 +102,24 @@ void print_linked_list(Node* linked_list) {
         current = current->next;
     }
 }
+
+Node* temp_test() {
+    dataType* value1 = create_dataType("test1", "int", "number", 6);
+    dataType* value2 = create_dataType("test2", "bool", "boolean", 10);
+    dataType* value3 = create_dataType("test3", "char", "character", 15);
+
+    Node* mylist = init_list(value1);
+    add_value(mylist, value2);
+    add_value(mylist, value3);
+    return mylist;
+}
+
+
+int main(void) {
+    Node* extern_test = temp_test();
+    print_linked_list(extern_test);
+
+    return 0;
+};
+
+
