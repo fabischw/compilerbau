@@ -1,20 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-
-typedef struct _dataType {
-    char* id_name;
-    char* data_type;
-    char* type;
-    int line_no;
-} dataType;
-
-
-typedef struct _Node {
-    dataType* value;
-    struct _Node* next;
-} Node;
+#include "linked_list.h"
 
 
 dataType* create_dataType(char* id_name, char* data_type, char* type, int line_no) {
@@ -24,8 +11,8 @@ dataType* create_dataType(char* id_name, char* data_type, char* type, int line_n
     dt->type = strdup(type);
     dt->line_no = line_no;
     return dt;
-    
 }
+
 
 Node* create_node(dataType* value) {
     Node* node = malloc(sizeof(Node));
@@ -38,6 +25,7 @@ Node* create_node(dataType* value) {
 Node* init_list(dataType* value) {
     return create_node(value);
 };
+
 
 void add_node(Node* linked_list, Node* node) {
     Node* current = linked_list;
@@ -52,6 +40,7 @@ void add_value(Node* linked_list, dataType* value) {
     add_node(linked_list, create_node(value));
 };
 
+
 Node* get_last_node(Node* linked_list) {
     Node* current = linked_list;
     while (current != NULL) {
@@ -59,6 +48,7 @@ Node* get_last_node(Node* linked_list) {
     }
     return current;
 }
+
 
 void free_dataType(dataType* dt) {
     dataType dt_val = *dt;
@@ -68,14 +58,12 @@ void free_dataType(dataType* dt) {
     free(dt);
 }
 
+
 void free_node(Node* node) {
     free_dataType(node->value);
     free(node);
 }
 
-void remove_last_node(Node* linked_list) {
-    free_node(get_last_node(linked_list));
-}
 
 void free_list(Node* linked_list) {
     // free entire linked list
@@ -103,6 +91,7 @@ void print_linked_list(Node* linked_list) {
     }
 }
 
+
 int main(void) {
     dataType* value1 = create_dataType("test1", "int", "number", 6);
     dataType* value2 = create_dataType("test2", "bool", "boolean", 10);
@@ -116,5 +105,3 @@ int main(void) {
 
     return 0;
 };
-
-
