@@ -15,7 +15,7 @@
 %union {
     struct _token_obj {
         char content[100];
-        struct Node *node;
+        struct _node *node;
     } token_obj;
 }
 
@@ -48,13 +48,13 @@
 %%
 
 program:
-    body		{ $$.node = $1.node; root = $$.node }
+    body		{ $$.node = $1.node; root = $$.node; }
     ;
 
 body:
-    | statement end_of_statement body		{ $$.node = create_node("statement", $1, $3); }
+    | statement end_of_statement body		{ $$.node = create_node("statement", $1.node, $3.node); }
     | NEWLINE body                          { $$.node = $2.node; }
-    | statement                             { $$.node = create_node("statement", $1, NULL); }
+    | statement                             { $$.node = create_node("statement", $1.node, NULL); }
     ;
 // note: body can be empty
 
@@ -72,18 +72,18 @@ end_of_statement:
     ;
 
 loop_declaration:
-    WHILE '(' expression ')' optional_newline '{' body '}'      { $$.node = create_node("while", $3, $7); }
+    WHILE '(' expression ')' optional_newline '{' body '}'      { $$.node = create_node("while", $3.node, $7.node); }
 
 condition_head:
     CONDITION_IF '(' expression ')' optional_newline '{' body '}' condition_body        { 
-        struct Node *branch = create_node("if_content", $3, $7); $$.node = create_node("if", branch, $9); }
+        Node *branch = create_node("if_content", $3.node, $7.node); $$.node = create_node("if", branch, $9.node); }
     ;
 
 condition_body:
     | condition_tail        { $$.node = $1.node; }
     | NEWLINE condition_body        { $$.node = $2.node; }
     | CONDITION_ELIF '(' expression ')' optional_newline '{' body '}' condition_body        { 
-        struct Node *branch = create_node("elif_content", $3, $7); $$.node = create_node("elif", branch, $9); }
+        Node *branch = create_node("elif_content", $3.node, $7.node); $$.node = create_node("elif", branch, $9.node); }
 
 condition_tail:
     CONDITION_ELSE optional_newline '{' body '}'        { $$.node = $4.node; }
@@ -91,9 +91,9 @@ condition_tail:
 
 variable_declaration:
     datatype IDENTIFIER '=' expression                                     { 
-        struct Node *var_dec_ass = create_node("var_declaration_assignment", $2, $4); $$.node = create_node("var_declaration", $1, var_dec_ass); }
+        Node *var_dec_ass = create_node("var_declaration_assignment", $2.node, $4.node); $$.node = create_node("var_declaration", $1.node, var_dec_ass); }
     | CONSTANT datatype IDENTIFIER '=' expression                          {
-        struct Node *var_dec_ass = create_node("var_declaration_assignment", $3, $5); $$.node = create_node("var_declaration_const", $2, var_dec_ass); }
+        Node *var_dec_ass = create_node("var_declaration_assignment", $3.node, $5.node); $$.node = create_node("var_declaration_const", $2.node, var_dec_ass); }
     | datatype '[' expression ']' IDENTIFIER '=' expression                {  } //TODO
     | CONSTANT datatype '[' expression ']' IDENTIFIER '=' expression       {  } //TODO
     ;
