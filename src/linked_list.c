@@ -90,18 +90,3 @@ void print_linked_list(Node* linked_list) {
         current = current->next;
     }
 }
-
-
-int main(void) {
-    dataType* value1 = create_dataType("test1", "int", "number", 6);
-    dataType* value2 = create_dataType("test2", "bool", "boolean", 10);
-    dataType* value3 = create_dataType("test3", "char", "character", 15);
-
-    Node* mylist = init_list(value1);
-    add_value(mylist, value2);
-    print_linked_list(mylist);
-    add_value(mylist, value3);
-    print_linked_list(mylist);
-
-    return 0;
-};
