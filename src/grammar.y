@@ -1,22 +1,22 @@
 %{
-	#include<stdio.h>
-	//#include "lex.yy.c"
-	#include "../src/tree/tree.h"
-	
-	extern FILE* yyin;
-	extern int yylineno; 
-	extern int yyerror(const char *s);
-	extern int yylex();
+    #include<stdio.h>
+    //#include "lex.yy.c"
+    #include "../src/tree/tree.h"
+    
+    extern FILE* yyin;
+    extern int yylineno; 
+    extern int yyerror(const char *s);
+    extern int yylex();
 
-	Node* root;
+    Node* root;
 
 %}
 
 %union {
-	struct _token_obj {
-		char content[100];
-		struct Node *node;
-	} token_obj;
+    struct _token_obj {
+        char content[100];
+        struct Node *node;
+    } token_obj;
 }
 
 %token <token_obj> TYPE_INT TYPE_FLOAT TYPE_BOOL TYPE_STR TYPE_CHAR 
@@ -30,11 +30,14 @@
 %token <token_obj> NEWLINE
 %token <token_obj> PLUS_EQUAL MINUS_EQUAL MUL_EQUAL DIV_EQUAL
 
+%type <token_obj> program body statement loop_declaration condition_head condition_body condition_tail variable_declaration expression assignment_expr indexing_expr arr_expr arr_body data_expr function_call_expr parameter_list math_expr logical_expr comparator logical_operator arithmetic_operator datatype optional_newline
+
 %left OR
 %left AND
 %nonassoc IS_EQUAL NOT_EQUAL
 %nonassoc LESS_EQUAL GREATER_EQUAL '<' '>'
 
+%left '=' PLUS_EQUAL MINUS_EQUAL MUL_EQUAL DIV_EQUAL
 %left '+' '-'
 %left '*' '/' '%'
 %right '^'
@@ -45,174 +48,182 @@
 %%
 
 program:
-	body		{}
-	;
+    body		{ $$.node = $1.node; root = $$.node }
+    ;
 
 body:
-	| statement end_of_statement body
-	| NEWLINE body
-	| statement
-	;
+    | statement end_of_statement body		{ $$.node = create_node("statement", $1, $3); }
+    | NEWLINE body                          { $$.node = $2.node; }
+    | statement                             { $$.node = create_node("statement", $1, NULL); }
+    ;
 // note: body can be empty
 
 
 statement:
-	expression
-	| variable_modification
-	| condition_head
-	| loop_declaration
-	;
+    expression                      { $$.node = $1.node; }
+    | variable_declaration          { $$.node = $1.node; }
+    | condition_head                { $$.node = $1.node; }
+    | loop_declaration              { $$.node = $1.node; }
+    ;
 
 end_of_statement:
-	NEWLINE
-	| ';'
-	;
+    NEWLINE
+    | ';'
+    ;
 
 loop_declaration:
-	WHILE '(' expression ')' optional_newline '{' body '}'
+    WHILE '(' expression ')' optional_newline '{' body '}'      { $$.node = create_node("while", $3, $7); }
 
 condition_head:
-	CONDITION_IF '(' expression ')' optional_newline '{' body '}' condition_body
-	;
+    CONDITION_IF '(' expression ')' optional_newline '{' body '}' condition_body        { 
+        struct Node *branch = create_node("if_content", $3, $7); $$.node = create_node("if", branch, $9); }
+    ;
 
 condition_body:
-	| condition_tail
-	| NEWLINE condition_body
-	| CONDITION_ELIF '(' expression ')' optional_newline '{' body '}' condition_body
+    | condition_tail        { $$.node = $1.node; }
+    | NEWLINE condition_body        { $$.node = $2.node; }
+    | CONDITION_ELIF '(' expression ')' optional_newline '{' body '}' condition_body        { 
+        struct Node *branch = create_node("elif_content", $3, $7); $$.node = create_node("elif", branch, $9); }
 
 condition_tail:
-	CONDITION_ELSE optional_newline '{' body '}'
-	;
+    CONDITION_ELSE optional_newline '{' body '}'        { $$.node = $4.node; }
+    ;
 
-variable_modification:
-	datatype IDENTIFIER '=' expression
-	| CONSTANT datatype IDENTIFIER '=' expression
-	| datatype '[' INTEGER ']' IDENTIFIER '=' expression
-	| CONSTANT datatype '[' INTEGER ']' IDENTIFIER '=' expression
-	| IDENTIFIER assignment_operator expression
-	| IDENTIFIER '[' INTEGER ']' assignment_operator expression
-	;
-	
-	/* TODO: allow only compiletime expressions for const values */
+variable_declaration:
+    datatype IDENTIFIER '=' expression                                     { 
+        struct Node *var_dec_ass = create_node("var_declaration_assignment", $2, $4); $$.node = create_node("var_declaration", $1, var_dec_ass); }
+    | CONSTANT datatype IDENTIFIER '=' expression                          {
+        struct Node *var_dec_ass = create_node("var_declaration_assignment", $3, $5); $$.node = create_node("var_declaration_const", $2, var_dec_ass); }
+    | datatype '[' expression ']' IDENTIFIER '=' expression                {  } //TODO
+    | CONSTANT datatype '[' expression ']' IDENTIFIER '=' expression       {  } //TODO
+    ;
+    
+    /* TODO: allow only compiletime expressions for const values */
 
 assignment_operator:
-	PLUS_EQUAL
-	| MINUS_EQUAL
-	| MUL_EQUAL
-	| DIV_EQUAL
-	| '='
-	;
+    PLUS_EQUAL
+    | MINUS_EQUAL
+    | MUL_EQUAL
+    | DIV_EQUAL
+    | '='
+    ;
 
 expression:
-	'(' expression ')'
-	| data_expr
-	| math_expr
-	| logical_expr
-	| arr_expr
-	| function_call_expr
-	| IDENTIFIER
-	| indexing_expr
-	;
+    '(' expression ')'
+    | data_expr
+    | math_expr
+    | logical_expr
+    | arr_expr
+    | function_call_expr
+    | IDENTIFIER
+    | indexing_expr
+    | assignment_expr
+    ;
+
+assignment_expr:
+    IDENTIFIER assignment_operator expression
+    | IDENTIFIER '[' expression ']' assignment_operator expression
+    ;
 
 indexing_expr:
-	expression '[' expression ']'
+    expression '[' expression ']'
 
 arr_expr:
-	'[' arr_body ']'
-	;
+    '[' arr_body ']'
+    ;
 
 arr_body:
-	| expression
-	| arr_body ',' expression
+    | expression
+    | arr_body ',' expression
 
 // literally defined data
 data_expr:
-	INTEGER
-	| FLOAT
-	| BOOLEAN
-	| STRING
-	| CHARACTER
-	;
+    INTEGER
+    | FLOAT
+    | BOOLEAN
+    | STRING
+    | CHARACTER
+    ;
 
 function_call_expr:
-	IDENTIFIER '(' parameter_list ')'
-	| IDENTIFIER '(' ')'
-	;
+    IDENTIFIER '(' parameter_list ')'
+    | IDENTIFIER '(' ')'
+    ;
 
 parameter_list:
-	expression
-	| parameter_list ',' expression
-	;
+    expression
+    | parameter_list ',' expression
+    ;
 // can be empty
 
-	
+    
 math_expr:
-	expression arithmetic_operator expression
-	| '-' expression %prec UMINUS
-	;
+    expression arithmetic_operator expression
+    | '-' expression %prec UMINUS
+    ;
 
 logical_expr:
-	expression logical_operator expression
-	| expression comparator expression
-	| '!' expression %prec UNOT
-	;
+    expression logical_operator expression
+    | expression comparator expression
+    | '!' expression %prec UNOT
+    ;
 
 comparator:
-	IS_EQUAL
-	| NOT_EQUAL
-	| LESS_EQUAL
-	| GREATER_EQUAL
-	| '<'
-	| '>'
-	;
-	
+    IS_EQUAL
+    | NOT_EQUAL
+    | LESS_EQUAL
+    | GREATER_EQUAL
+    | '<'
+    | '>'
+    ;
+    
 logical_operator:
-	AND
-	| OR
-	;
+    AND
+    | OR
+    ;
 
 arithmetic_operator:
-	'+'
-	| '-'
-	| '*'
-	| '/'
-	| '^'
-	| '%'
-	;
+    '+'
+    | '-'
+    | '*'
+    | '/'
+    | '^'
+    | '%'
+    ;
 
 datatype:
-	TYPE_INT
-	| TYPE_FLOAT
-	| TYPE_BOOL
-	| TYPE_STR
-	| TYPE_CHAR
-	;
+    TYPE_INT
+    | TYPE_FLOAT
+    | TYPE_BOOL
+    | TYPE_STR
+    | TYPE_CHAR
+    ;
 
 optional_newline:
-	| NEWLINE optional_newline
-	;
-	
+    | NEWLINE optional_newline
+    ;
+    
 %%
 
 int
 main(int argc, char** argv)
 {
-	if(argc == 2)
-	{
-		yyin = fopen(argv[1], "r");
-		yyparse();
-		fclose(yyin);
-	}
-	else {
-    	printf (">>> Please type in any input:\n");
-    	yyparse();
-	}
+    if(argc == 2)
+    {
+        yyin = fopen(argv[1], "r");
+        yyparse();
+        fclose(yyin);
+    }
+    else {
+        printf (">>> Please type in any input:\n");
+        yyparse();
+    }
     return 0;
 }
 
 int
 yyerror(const char* s)
 {
-	fprintf(stderr, "Error in line: %d, %s\n", yylineno, s);
-	return 1;
+    fprintf(stderr, "Error in line: %d, %s\n", yylineno, s);
+    return 1;
 }
