@@ -1,26 +1,34 @@
 %{
 	#include<stdio.h>
+	#include "../src/tree.h"
+	//#include "lex.yy.c"
 	
 	extern FILE* yyin;
 	extern int yylineno; 
 	extern int yyerror(const char *s);
 	extern int yylex();
+
+	Node* root;
+
 %}
 
 %union {
-	struct Node node;
+	struct _token_obj {
+		char content[100];
+		struct Node *node;
+	} token_obj;
 }
 
-%token TYPE_INT TYPE_FLOAT TYPE_BOOL TYPE_STR TYPE_CHAR 
-%token CONSTANT
-%token IDENTIFIER
-%token INTEGER FLOAT BOOLEAN STRING CHARACTER
-%token OR AND
-%token CONDITION_IF CONDITION_ELIF CONDITION_ELSE
-%token WHILE
-%token LESS_EQUAL GREATER_EQUAL IS_EQUAL NOT_EQUAL
-%token NEWLINE
-%token PLUS_EQUAL MINUS_EQUAL MUL_EQUAL DIV_EQUAL
+%token <token_obj> TYPE_INT TYPE_FLOAT TYPE_BOOL TYPE_STR TYPE_CHAR 
+%token <token_obj> CONSTANT
+%token <token_obj> IDENTIFIER
+%token <token_obj> INTEGER FLOAT BOOLEAN STRING CHARACTER
+%token <token_obj> OR AND
+%token <token_obj> CONDITION_IF CONDITION_ELIF CONDITION_ELSE
+%token <token_obj> WHILE
+%token <token_obj> LESS_EQUAL GREATER_EQUAL IS_EQUAL NOT_EQUAL
+%token <token_obj> NEWLINE
+%token <token_obj> PLUS_EQUAL MINUS_EQUAL MUL_EQUAL DIV_EQUAL
 
 %left OR
 %left AND
@@ -37,7 +45,7 @@
 %%
 
 program:
-	body
+	body		{}
 	;
 
 body:
