@@ -2,7 +2,16 @@
 
   #define TREE_H
  
-  #include "tree.c"
+  typedef struct _node
+  {
+  
+    struct _node* leftNode;
+    struct _node* rightNode;
+  
+    char* token;
+    
+  } Node;
+
 
   Node* create_node(char* token);
   void free_node(Node** node);

@@ -1,15 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-
-typedef struct _node
-{
-
-  struct _node* leftNode;
-  struct _node* rightNode;
-
-  char* token;
-  
-} Node;
+#include "tree.h"
 
 Node*
 create_node(char* token)

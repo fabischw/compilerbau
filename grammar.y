@@ -1,5 +1,5 @@
 %{
-	#include<stdio.h>
+	#include <stdio.h>
 	#include "../src/tree/tree.h"
 	
 	extern FILE* yyin;
@@ -203,5 +203,6 @@ int
 yyerror(const char* s)
 {
 	fprintf(stderr, "Error in line: %d, %s\n", yylineno, s);
+	Node* root = create_node("e");
 	return 1;
 }
