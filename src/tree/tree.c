@@ -1,23 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
-
-typedef struct _node
-{
-
-  struct _node* leftNode;
-  struct _node* rightNode;
-
-  int value;
-  
-} Node;
+#include "tree.h"
 
 Node*
-create_node(int value)
+create_node(char* token, Node* leftNode, Node* rightNode)
 {
   Node* node = malloc(sizeof(Node));  
-  node->leftNode = NULL;
-  node->rightNode = NULL;
-  node->value = value;
+  node->leftNode = leftNode;
+  node->rightNode = rightNode;
+  node->token = token;
   return node;
 }
 
@@ -36,6 +27,6 @@ traverse(Node* root)
 {
   if(root == NULL) return;
   traverse(root->leftNode);
-  printf("%d\n", root->value);
+  printf("%s\n", root->token);
   traverse(root->rightNode);
 }

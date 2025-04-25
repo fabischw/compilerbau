@@ -1,7 +1,7 @@
 %{
 	#include<stdio.h>
-	#include "../src/tree.h"
 	//#include "lex.yy.c"
+	#include "../src/tree/tree.h"
 	
 	extern FILE* yyin;
 	extern int yylineno; 
