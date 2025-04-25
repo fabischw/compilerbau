@@ -13,7 +13,7 @@
   } Node;
 
 
-  Node* create_node(char* token);
+  Node* create_node(char* token, Node* leftNode, Node* rightNode);
   void free_node(Node** node);
   void traverse(Node* root);
 

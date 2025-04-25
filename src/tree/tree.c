@@ -3,11 +3,11 @@
 #include "tree.h"
 
 Node*
-create_node(char* token)
+create_node(char* token, Node* leftNode, Node* rightNode)
 {
   Node* node = malloc(sizeof(Node));  
-  node->leftNode = NULL;
-  node->rightNode = NULL;
+  node->leftNode = leftNode;
+  node->rightNode = rightNode;
   node->token = token;
   return node;
 }
