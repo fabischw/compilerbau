@@ -29,8 +29,9 @@
 %token <token_obj> LESS_EQUAL GREATER_EQUAL IS_EQUAL NOT_EQUAL
 %token <token_obj> NEWLINE
 %token <token_obj> PLUS_EQUAL MINUS_EQUAL MUL_EQUAL DIV_EQUAL
+%token <token_obj> '=' //'+' '-' '*' '/' '%' '^'
 
-%type <token_obj> program body statement loop_declaration condition_head condition_body condition_tail variable_declaration expression assignment_expr indexing_expr arr_expr arr_body data_expr function_call_expr parameter_list math_expr logical_expr comparator logical_operator arithmetic_operator datatype optional_newline
+%type <token_obj> program body statement loop_declaration condition_head condition_body condition_tail variable_declaration expression assignment_expr indexing_expr arr_expr arr_body data_expr function_call_expr parameter_list math_expr assignment_operator logical_expr comparator logical_operator arithmetic_operator datatype optional_newline
 
 %left OR
 %left AND
@@ -91,11 +92,17 @@ condition_tail:
 
 variable_declaration:
     datatype IDENTIFIER '=' expression                                     { 
-        Node *var_dec_ass = create_node("var_declaration_assignment", $2.node, $4.node); $$.node = create_node("var_declaration", $1.node, var_dec_ass); }
+        Node *var_dec_ass = create_node($3.content, $2.node, $4.node); $$.node = create_node("var_declaration", $1.node, var_dec_ass); }
     | CONSTANT datatype IDENTIFIER '=' expression                          {
-        Node *var_dec_ass = create_node("var_declaration_assignment", $3.node, $5.node); $$.node = create_node("var_declaration_const", $2.node, var_dec_ass); }
-    | datatype '[' expression ']' IDENTIFIER '=' expression                {  } //TODO
-    | CONSTANT datatype '[' expression ']' IDENTIFIER '=' expression       {  } //TODO
+        Node *var_dec_ass = create_node($4.content, $3.node, $5.node); $$.node = create_node("var_declaration_const", $2.node, var_dec_ass); }
+    | datatype '[' expression ']' IDENTIFIER '=' expression                { 
+        Node *var_dec_array = create_node("var_declaration_array", $1.node, $3.node); 
+        Node *var_dec_ass = create_node($6.content, $5.node, $7.node); 
+        $$.node = create_node("var_declaration", var_dec_array, var_dec_ass); } 
+    | CONSTANT datatype '[' expression ']' IDENTIFIER '=' expression       { 
+        Node *var_dec_array = create_node("var_declaration_array", $2.node, $4.node); 
+        Node *var_dec_ass = create_node($7.content, $6.node, $8.node); 
+        $$.node = create_node("var_declaration_const", var_dec_array, var_dec_ass); } 
     ;
     
     /* TODO: allow only compiletime expressions for const values */
@@ -109,24 +116,25 @@ assignment_operator:
     ;
 
 expression:
-    '(' expression ')'
-    | data_expr
-    | math_expr
-    | logical_expr
-    | arr_expr
-    | function_call_expr
-    | IDENTIFIER
-    | indexing_expr
-    | assignment_expr
+    '(' expression ')'      { $$.node = $2.node; }
+    | data_expr             { $$.node = $1.node; }
+    | math_expr             { $$.node = $1.node; } 
+    | logical_expr          { $$.node = $1.node; } 
+    | arr_expr              { $$.node = $1.node; } 
+    | function_call_expr    { $$.node = $1.node; } 
+    | IDENTIFIER            { $$.node = create_node($1.content, NULL, NULL); } 
+    | indexing_expr         { $$.node = $1.node; } 
+    | assignment_expr       { $$.node = $1.node; } 
     ;
 
 assignment_expr:
-    IDENTIFIER assignment_operator expression
-    | IDENTIFIER '[' expression ']' assignment_operator expression
+    IDENTIFIER assignment_operator expression       { $$.node = create_node($2.content, $1.node, $3.node); }
+    | IDENTIFIER '[' expression ']' assignment_operator expression      { 
+        Node *array_indexing = create_node("array_indexing", $1.node, $3.node); $$.node = create_node($5.content, array_indexing, $6.node); }
     ;
 
 indexing_expr:
-    expression '[' expression ']'
+    expression '[' expression ']'       { }
 
 arr_expr:
     '[' arr_body ']'
@@ -158,8 +166,8 @@ parameter_list:
 
     
 math_expr:
-    expression arithmetic_operator expression
-    | '-' expression %prec UMINUS
+    expression arithmetic_operator expression       { $$.node = create_node($2.content, $1.node, $3.node); }
+    | '-' expression %prec UMINUS                   { $$.node = create_node($1.content, NULL, $2.node); }
     ;
 
 logical_expr:
@@ -213,6 +221,7 @@ main(int argc, char** argv)
         yyin = fopen(argv[1], "r");
         yyparse();
         fclose(yyin);
+        traverse(root);
     }
     else {
         printf (">>> Please type in any input:\n");
