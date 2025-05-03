@@ -1,10 +1,23 @@
 %{
-	#include<stdio.h>
+	#include <stdio.h>
+	#include <string.h>
+	#include "../src/linked_list.h"
 	
 	extern FILE* yyin;
 	extern int yylineno; 
 	extern int yyerror(const char *s);
 	extern int yylex();
+	extern char* yytext;
+
+	typedef enum _SymbolTableType
+	{
+		ST_VARIABLE,
+		ST_CONSTANT,
+		ST_KEYWORD,
+		ST_FUNCTION,
+	} SymbolTableType;
+
+	void add_to_symbol_table(SymbolTableType type);
 %}
 
 %token TYPE_INT TYPE_FLOAT TYPE_BOOL TYPE_STR TYPE_CHAR 
@@ -57,7 +70,7 @@ end_of_statement:
 	;
 
 loop_declaration:
-	WHILE '(' expression ')' optional_newline '{' body '}'
+	WHILE '(' expression ')' optional_newline '{' body '}' {add_to_symbol_table(ST_KEYWORD);}
 
 condition_head:
 	CONDITION_IF '(' expression ')' optional_newline '{' body '}' condition_body
@@ -73,9 +86,9 @@ condition_tail:
 	;
 
 variable_modification:
-	datatype IDENTIFIER '=' expression
-	| CONSTANT datatype IDENTIFIER '=' expression
-	| datatype '[' INTEGER ']' IDENTIFIER '=' expression
+	datatype IDENTIFIER '=' expression {add_to_symbol_table(ST_VARIABLE);}
+	| CONSTANT datatype IDENTIFIER '=' expression {add_to_symbol_table(ST_CONSTANT);}
+	| datatype '[' INTEGER ']' IDENTIFIER '=' expression {add_to_symbol_table(ST_VARIABLE);}
 	| CONSTANT datatype '[' INTEGER ']' IDENTIFIER '=' expression
 	| IDENTIFIER assignment_operator expression
 	| IDENTIFIER '[' INTEGER ']' assignment_operator expression
@@ -196,6 +209,29 @@ main(int argc, char** argv)
     	yyparse();
 	}
     return 0;
+}
+
+void
+add_to_symbol_table(SymbolTableType type)
+{
+	switch(type)
+	{
+		case ST_VARIABLE:
+			printf("Variable\n");
+			printf("%s", strdup(yytext));
+			break;
+
+		case ST_CONSTANT:
+			printf("Constant\n");
+			break;
+
+		case ST_KEYWORD:
+			printf("Keyword\n");
+			break;
+
+		case ST_FUNCTION:
+			break;
+	}
 }
 
 int
