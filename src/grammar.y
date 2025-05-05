@@ -1,12 +1,22 @@
 %{
     #include<stdio.h>
-    //#include "lex.yy.c"
     #include "../src/tree/tree.h"
+    #include "../src/linked_list/linked_list.h"
     
     extern FILE* yyin;
     extern int yylineno; 
     extern int yyerror(const char *s);
     extern int yylex();
+    extern char* yytext;
+
+ typedef enum _SymbolTableType {
+        ST_VARIABLE,
+        ST_CONSTANT,
+        ST_KEYWORD,
+        ST_FUNCTION,
+    } SymbolTableType;
+
+    void add_to_symbol_table(SymbolTableType type, char* text);
 
     Node* root;
 
@@ -90,7 +100,7 @@ condition_tail:
     ;
 
 variable_declaration:
-    datatype IDENTIFIER '=' expression                                     { 
+    datatype IDENTIFIER '=' expression                                     { add_to_symbol_table(ST_VARIABLE, yytext); 
         Node *var_dec_ass = create_node("var_declaration_assignment", $2.node, $4.node); $$.node = create_node("var_declaration", $1.node, var_dec_ass); }
     | CONSTANT datatype IDENTIFIER '=' expression                          {
         Node *var_dec_ass = create_node("var_declaration_assignment", $3.node, $5.node); $$.node = create_node("var_declaration_const", $2.node, var_dec_ass); }
@@ -219,6 +229,29 @@ main(int argc, char** argv)
         yyparse();
     }
     return 0;
+}
+
+void
+add_to_symbol_table(SymbolTableType type, char* text)
+{
+    switch(type)
+    {
+        case ST_VARIABLE:
+            printf("Variable\n");
+            printf("%s", text);
+            break;
+
+        case ST_CONSTANT:
+            printf("Constant\n");
+            break;
+
+        case ST_KEYWORD:
+            printf("Keyword\n");
+            break;
+
+        case ST_FUNCTION:
+            break;
+    }
 }
 
 int

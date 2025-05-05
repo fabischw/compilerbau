@@ -5,6 +5,7 @@
 	extern int yyerror(const char* s);
 	int yylineno;	
 	int yylex();
+	char* yytext;
 	
 %}
 
@@ -64,6 +65,6 @@ alpha [a-zA-Z]
 [\n]                        { yylineno++; return (NEWLINE); }
 #[^\n]* ;
 [ \t] ;
-. {yyerror("unknown symbol"); };
+.     {return *yytext;}
 
 %%

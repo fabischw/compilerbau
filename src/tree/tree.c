@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include "tree.h"
 
-Node*
-create_node(char* token, Node* leftNode, Node* rightNode)
+T_Node*
+t_create_node(char* token, T_Node* leftNode, T_Node* rightNode)
 {
-  Node* node = malloc(sizeof(Node));  
+  T_Node* node = malloc(sizeof(T_Node));  
   node->leftNode = leftNode;
   node->rightNode = rightNode;
   node->token = token;
@@ -13,20 +13,20 @@ create_node(char* token, Node* leftNode, Node* rightNode)
 }
 
 void
-free_node(Node** node)
+t_free_node(T_Node** node)
 {
   if(*node == NULL) return;
-  free_node(&(*node)->leftNode);
-  free_node(&(*node)->rightNode);
+  t_free_node(&(*node)->leftNode);
+  t_free_node(&(*node)->rightNode);
   free(*node);
   *node = NULL;
 }
 
 void
-traverse(Node* root)
+t_traverse(T_Node* root)
 {
   if(root == NULL) return;
-  traverse(root->leftNode);
+  t_traverse(root->leftNode);
   printf("%s\n", root->token);
-  traverse(root->rightNode);
+  t_traverse(root->rightNode);
 }
