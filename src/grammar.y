@@ -1,3 +1,5 @@
+%debug
+
 %{
     #include<stdio.h>
     #include<string.h>
@@ -58,9 +60,10 @@ program:
     ;
 
 body:
-    | statement                             {DP(body3); $$.node = create_node("statement", $1.node, NULL); }
+                                            {DP(body0); $$.node = NULL; }
+    | statement                             {DP(body1); $$.node = create_node("statement", $1.node, NULL); }
     | NEWLINE body                          {DP(body2); $$.node = $2.node; }
-    | statement end_of_statement body		{DP(body1); $$.node = create_node("statement", $1.node, $3.node); }
+    | statement end_of_statement body		{DP(body3); $$.node = create_node("statement", $1.node, $3.node); }
     ;
 // note: body can be empty
 
@@ -93,6 +96,7 @@ condition_elif:
         Node *branch = create_node("elif_content", $3.node, $7.node); $$.node = create_node("elif", branch, $9.node); }
 
 condition_else:
+                                                          {DP(condition_else0); $$.node = NULL; }
     | CONDITION_ELSE optional_newline '{' body '}'        {DP(condition_else1); $$.node = $4.node; }
     ;
 
@@ -214,6 +218,8 @@ main(int argc, char** argv)
 {
     if(argc == 2)
     {
+        extern int yydebug;
+        yydebug = 0;
         yyin = fopen(argv[1], "r");
         yyparse();
         fclose(yyin);
