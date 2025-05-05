@@ -2,19 +2,20 @@
 
   #define TREE_H
  
-  typedef struct _node
+  typedef struct _t_node
   {
   
-    struct _node* leftNode;
-    struct _node* rightNode;
+    struct _t_node* leftNode;
+    struct _t_node* rightNode;
   
     char* token;
     
-  } Node;
+  } T_Node;
 
 
-  Node* create_node(char* token, Node* leftNode, Node* rightNode);
-  void free_node(Node** node);
-  void traverse(Node* root);
+  T_Node* t_create_node(char* token, T_Node* leftNode, T_Node* rightNode);
+  void t_free_node(T_Node** node);
+  void t_traverse_(T_Node* root, int depth);
+  void t_traverse(T_Node* root);
 
 #endif

@@ -3,53 +3,49 @@
 #include <string.h>
 #include "tree.h"
 
-Node*
-create_node(char* token, Node* leftNode, Node* rightNode)
+T_Node*
+t_create_node(char* token, T_Node* leftNode, T_Node* rightNode)
 {
-  Node* node = malloc(sizeof(Node));  
-  char *tokencpy = (char *)malloc(strlen(token)+1);
-  strcpy(tokencpy, token);
+  T_Node* node = malloc(sizeof(T_Node));  
   node->leftNode = leftNode;
   node->rightNode = rightNode;
-  node->token = tokencpy;
+  node->token = token;
   return node;
 }
 
 void
-free_node(Node** node)
+t_free_node(T_Node** node)
 {
   if(*node == NULL) return;
-  free_node(&(*node)->leftNode);
-  free_node(&(*node)->rightNode);
+  t_free_node(&(*node)->leftNode);
+  t_free_node(&(*node)->rightNode);
   free(*node);
   *node = NULL;
 }
 
-void _traverse(Node* root, int depth);
-
 void
-traverse(Node* node) {
-  _traverse(node, 0);
+t_traverse(T_Node* root)
+{
+  t_traverse_(root, 0);
 }
 
 void
-_traverse(Node* root, int depth)
+t_traverse_(T_Node* root, int depth)
 {
-  if(root == NULL) {
-    for (int i = 0; i < depth; i++) {
-      printf("   ");
-    }
+  if(root == NULL)
+  {
+    for(int i = 0; i < depth; i++) printf("    ");
     printf("\n");
     return;
   }
-  _traverse(root->leftNode, depth+1);
-  for (int i = 0; i < depth; i++) {
-    printf("   ");
-  }
-  if (strlen(root->token) == 0) {
+  t_traverse_(root->leftNode, depth+1);
+  for(int i = 0; i < depth; i++) printf("    ");
+  if(strlen(root->token) == 0)
+  {
     printf("EMPTY\n");
-  } else {
+  } else
+  {
     printf("%s\n", root->token);
   }
-  _traverse(root->rightNode, depth+1);
+  t_traverse_(root->rightNode, depth+1);
 }
