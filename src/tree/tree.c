@@ -1,14 +1,17 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "tree.h"
 
 Node*
 create_node(char* token, Node* leftNode, Node* rightNode)
 {
   Node* node = malloc(sizeof(Node));  
+  char *tokencpy = (char *)malloc(strlen(token)+1);
+  strcpy(tokencpy, token);
   node->leftNode = leftNode;
   node->rightNode = rightNode;
-  node->token = token;
+  node->token = tokencpy;
   return node;
 }
 
@@ -22,11 +25,31 @@ free_node(Node** node)
   *node = NULL;
 }
 
+void _traverse(Node* root, int depth);
+
 void
-traverse(Node* root)
+traverse(Node* node) {
+  _traverse(node, 0);
+}
+
+void
+_traverse(Node* root, int depth)
 {
-  if(root == NULL) return;
-  traverse(root->leftNode);
-  printf("%s\n", root->token);
-  traverse(root->rightNode);
+  if(root == NULL) {
+    for (int i = 0; i < depth; i++) {
+      printf("   ");
+    }
+    printf("\n");
+    return;
+  }
+  _traverse(root->leftNode, depth+1);
+  for (int i = 0; i < depth; i++) {
+    printf("   ");
+  }
+  if (strlen(root->token) == 0) {
+    printf("EMPTY\n");
+  } else {
+    printf("%s\n", root->token);
+  }
+  _traverse(root->rightNode, depth+1);
 }
