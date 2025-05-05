@@ -9,7 +9,7 @@ t_create_node(char* token, T_Node* leftNode, T_Node* rightNode)
   T_Node* node = malloc(sizeof(T_Node));  
   node->leftNode = leftNode;
   node->rightNode = rightNode;
-  node->token = token;
+  node->token = strdup(token);
   return node;
 }
 
