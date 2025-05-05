@@ -1,10 +1,13 @@
 %{
     #include<stdio.h>
+    #include<string.h>
     //#include "lex.yy.c"
     #include "../src/tree/tree.h"
     
+    #define DP(s) printf("->%s\n", #s)
+
     extern FILE* yyin;
-    extern int yylineno; 
+    extern int yylineno;
     extern int yyerror(const char *s);
     extern int yylex();
 
@@ -29,7 +32,7 @@
 %token <token_obj> LESS_EQUAL GREATER_EQUAL IS_EQUAL NOT_EQUAL
 %token <token_obj> NEWLINE
 %token <token_obj> PLUS_EQUAL MINUS_EQUAL MUL_EQUAL DIV_EQUAL
-%token <token_obj> '=' //'+' '-' '*' '/' '%' '^'
+%token <token_obj> '=' '+' '-' '*' '/' '%' '^' '<' '>'
 
 %type <token_obj> program body statement loop_declaration condition_head condition_body condition_tail variable_declaration expression assignment_expr indexing_expr arr_expr arr_body data_expr function_call_expr parameter_list math_expr assignment_operator logical_expr comparator logical_operator arithmetic_operator datatype optional_newline
 
@@ -49,22 +52,22 @@
 %%
 
 program:
-    body		{ $$.node = $1.node; root = $$.node; }
+    body		{DP(program1); $$.node = $1.node; root = $$.node; }
     ;
 
 body:
-    | statement end_of_statement body		{ $$.node = create_node("statement", $1.node, $3.node); }
-    | NEWLINE body                          { $$.node = $2.node; }
-    | statement                             { $$.node = create_node("statement", $1.node, NULL); }
+    | statement end_of_statement body		{DP(body1); $$.node = create_node("statement", $1.node, $3.node); }
+    | NEWLINE body                          {DP(body2); $$.node = $2.node; }
+    | statement                             {DP(body3); $$.node = create_node("statement", $1.node, NULL); }
     ;
 // note: body can be empty
 
 
 statement:
-    expression                      { $$.node = $1.node; }
-    | variable_declaration          { $$.node = $1.node; }
-    | condition_head                { $$.node = $1.node; }
-    | loop_declaration              { $$.node = $1.node; }
+    expression                      {DP(statement1); $$.node = $1.node; }
+    | variable_declaration          {DP(statement2); $$.node = $1.node; }
+    | condition_head                {DP(statement3); $$.node = $1.node; }
+    | loop_declaration              {DP(statement4); $$.node = $1.node; }
     ;
 
 end_of_statement:
@@ -73,33 +76,33 @@ end_of_statement:
     ;
 
 loop_declaration:
-    WHILE '(' expression ')' optional_newline '{' body '}'      { $$.node = create_node("while", $3.node, $7.node); }
+    WHILE '(' expression ')' optional_newline '{' body '}'      {DP(loop_declaration1); $$.node = create_node("while", $3.node, $7.node); }
 
 condition_head:
-    CONDITION_IF '(' expression ')' optional_newline '{' body '}' condition_body        { 
+    CONDITION_IF '(' expression ')' optional_newline '{' body '}' condition_body        {DP(condition_head1); 
         Node *branch = create_node("if_content", $3.node, $7.node); $$.node = create_node("if", branch, $9.node); }
     ;
 
 condition_body:
-    | condition_tail        { $$.node = $1.node; }
-    | NEWLINE condition_body        { $$.node = $2.node; }
-    | CONDITION_ELIF '(' expression ')' optional_newline '{' body '}' condition_body        { 
+    | condition_tail        {DP(condition_body1); $$.node = $1.node; }
+    | NEWLINE condition_body        {DP(condition_body2); $$.node = $2.node; }
+    | CONDITION_ELIF '(' expression ')' optional_newline '{' body '}' condition_body        {DP(condition_body3); 
         Node *branch = create_node("elif_content", $3.node, $7.node); $$.node = create_node("elif", branch, $9.node); }
 
 condition_tail:
-    CONDITION_ELSE optional_newline '{' body '}'        { $$.node = $4.node; }
+    CONDITION_ELSE optional_newline '{' body '}'        {DP(condition_tail1); $$.node = $4.node; }
     ;
 
 variable_declaration:
-    datatype IDENTIFIER '=' expression                                     { 
+    datatype IDENTIFIER '=' expression                                     {DP(variable_declaration1); 
         Node *var_dec_ass = create_node($3.content, $2.node, $4.node); $$.node = create_node("var_declaration", $1.node, var_dec_ass); }
-    | CONSTANT datatype IDENTIFIER '=' expression                          {
+    | CONSTANT datatype IDENTIFIER '=' expression                          {DP(variable_declaration2);
         Node *var_dec_ass = create_node($4.content, $3.node, $5.node); $$.node = create_node("var_declaration_const", $2.node, var_dec_ass); }
-    | datatype '[' expression ']' IDENTIFIER '=' expression                { 
+    | datatype '[' expression ']' IDENTIFIER '=' expression                {DP(variable_declaration3); 
         Node *var_dec_array = create_node("var_declaration_array", $1.node, $3.node); 
         Node *var_dec_ass = create_node($6.content, $5.node, $7.node); 
         $$.node = create_node("var_declaration", var_dec_array, var_dec_ass); } 
-    | CONSTANT datatype '[' expression ']' IDENTIFIER '=' expression       { 
+    | CONSTANT datatype '[' expression ']' IDENTIFIER '=' expression       {DP(variable_declaration4); 
         Node *var_dec_array = create_node("var_declaration_array", $2.node, $4.node); 
         Node *var_dec_ass = create_node($7.content, $6.node, $8.node); 
         $$.node = create_node("var_declaration_const", var_dec_array, var_dec_ass); } 
@@ -107,37 +110,30 @@ variable_declaration:
     
     /* TODO: allow only compiletime expressions for const values */
 
-assignment_operator:
-    PLUS_EQUAL
-    | MINUS_EQUAL
-    | MUL_EQUAL
-    | DIV_EQUAL
-    | '='
-    ;
-
 expression:
-    '(' expression ')'      { $$.node = $2.node; }
-    | data_expr             { $$.node = $1.node; }
-    | math_expr             { $$.node = $1.node; } 
-    | logical_expr          { $$.node = $1.node; } 
-    | arr_expr              { $$.node = $1.node; } 
-    | function_call_expr    { $$.node = $1.node; } 
-    | IDENTIFIER            { $$.node = create_node($1.content, NULL, NULL); } 
-    | indexing_expr         { $$.node = $1.node; } 
-    | assignment_expr       { $$.node = $1.node; } 
+    '(' expression ')'      {DP(expression1); $$.node = $2.node; }
+    | data_expr             {DP(expression2); $$.node = $1.node; }
+    | math_expr             {DP(expression3); $$.node = $1.node; } 
+    | logical_expr          {DP(expression4); $$.node = $1.node; } 
+    | arr_expr              {DP(expression5); $$.node = $1.node; } 
+    | function_call_expr    {DP(expression6); $$.node = $1.node; } 
+    | IDENTIFIER            {DP(expression7); $$.node = create_node($1.content, NULL, NULL); } 
+    | indexing_expr         {DP(expression8); $$.node = $1.node; } 
+    | assignment_expr       {DP(expression9); $$.node = $1.node; } 
     ;
 
 assignment_expr:
-    IDENTIFIER assignment_operator expression       { $$.node = create_node($2.content, $1.node, $3.node); }
-    | IDENTIFIER '[' expression ']' assignment_operator expression      { 
+    IDENTIFIER assignment_operator expression %prec '='      {DP(assignment_expr1); 
+        Node *identifier = create_node($1.content, NULL, NULL); $$.node = create_node($2.content, identifier, $3.node); }
+    | IDENTIFIER '[' expression ']' assignment_operator expression %prec '='      {DP(assignment_expr2); 
         Node *array_indexing = create_node("array_indexing", $1.node, $3.node); $$.node = create_node($5.content, array_indexing, $6.node); }
     ;
 
 indexing_expr:
-    expression '[' expression ']'       { }
+    expression '[' expression ']' 
 
 arr_expr:
-    '[' arr_body ']'
+    '[' arr_body ']'        {DP(arr_expr1); $$.node = $2.node; }
     ;
 
 arr_body:
@@ -166,14 +162,14 @@ parameter_list:
 
     
 math_expr:
-    expression arithmetic_operator expression       { $$.node = create_node($2.content, $1.node, $3.node); }
-    | '-' expression %prec UMINUS                   { $$.node = create_node($1.content, NULL, $2.node); }
+    expression arithmetic_operator expression       {DP(math_expr1); $$.node = create_node($2.content, $1.node, $3.node); }
+    | '-' expression %prec UMINUS                   {DP(math_expr2); $$.node = create_node($1.content, NULL, $2.node); }
     ;
 
 logical_expr:
-    expression logical_operator expression
-    | expression comparator expression
-    | '!' expression %prec UNOT
+    expression logical_operator expression      {DP(logical_expr1); $$.node = create_node($2.content, $1.node, $3.node); }
+    | expression comparator expression          {DP(logical_expr2); $$.node = create_node($2.content, $1.node, $3.node); }
+    | '!' expression %prec UNOT                 { }
     ;
 
 comparator:
@@ -184,6 +180,14 @@ comparator:
     | '<'
     | '>'
     ;
+
+assignment_operator:
+    PLUS_EQUAL
+    | MINUS_EQUAL
+    | MUL_EQUAL
+    | DIV_EQUAL
+    | '='
+    ;
     
 logical_operator:
     AND
@@ -191,7 +195,7 @@ logical_operator:
     ;
 
 arithmetic_operator:
-    '+'
+    '+' 
     | '-'
     | '*'
     | '/'
