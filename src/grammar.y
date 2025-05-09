@@ -12,8 +12,6 @@
     #define ADD_ST(type, id, var_type) add_to_symbol_table(ST_##type, id, var_type)
 
 
-    // WHILE IF ELSE does not generate the right symbol table
-
     extern FILE* yyin;
     extern int yylineno;
     extern int yyerror(const char *s);

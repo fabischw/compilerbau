@@ -81,8 +81,7 @@ void ll_print_linked_list(LL_Node* linked_list) {
     // print entire linked list (used for debugging)
     LL_Node* current = linked_list;
     while (current != NULL) {
-        printf("next: (%lu); value: (id_name: %s | data_type: %s | type: %s | line: %d)\n",
-                current->next,
+        printf("value: (id_name: %s | data_type: %s | type: %s | line: %d)\n",
                 current->value->id_name,
                 current->value->data_type,
                 current->value->type,
