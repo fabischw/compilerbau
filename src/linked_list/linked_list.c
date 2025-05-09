@@ -4,7 +4,7 @@
 #include "linked_list.h"
 
 
-dataType* create_dataType(char* id_name, char* data_type, char* type, int line_no) {
+dataType* ll_create_dataType(char* id_name, char* data_type, char* type, int line_no) {
     dataType* dt = malloc(sizeof(dataType));
     dt->id_name = strdup(id_name);
     dt->data_type = strdup(data_type);

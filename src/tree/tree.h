@@ -15,6 +15,7 @@
 
   T_Node* t_create_node(char* token, T_Node* leftNode, T_Node* rightNode);
   void t_free_node(T_Node** node);
+  void t_traverse_(T_Node* root, int depth);
   void t_traverse(T_Node* root);
 
 #endif
