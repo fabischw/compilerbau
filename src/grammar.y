@@ -9,6 +9,11 @@
     //#define DP(s) /*printf("->%s\n", #s)*/
     #define DP(s) (1)
 
+    #define ADD_ST(type, id, var_type) add_to_symbol_table(ST_##type, id, var_type)
+
+
+    // WHILE IF ELSE does not generate the right symbol table
+
     extern FILE* yyin;
     extern int yylineno;
     extern int yyerror(const char *s);
@@ -22,9 +27,11 @@
         ST_FUNCTION,
     } SymbolTableType;
 
-    void add_to_symbol_table(SymbolTableType type, const char* identifier, const char* var_type);
+    void add_to_symbol_table(SymbolTableType type, char* identifier, char* var_type);
 
     T_Node* root;
+
+    LL_Node* symbol_table = NULL;
 
 %}
 
@@ -93,41 +100,41 @@ end_of_statement:
     ;
 
 loop_declaration:
-    WHILE '(' expression ')' optional_newline '{' body '}'      {DP(loop_declaration1); $$.node = t_create_node("while", $3.node, $7.node); }
+    WHILE '(' expression ')' optional_newline '{' body '}'      {ADD_ST(KEYWORD, "while", "None"); DP(loop_declaration1); $$.node = t_create_node("while", $3.node, $7.node); }
 
 condition_if:
-    CONDITION_IF '(' expression ')' optional_newline '{' body '}' condition_elif        {DP(condition_if1); 
+    CONDITION_IF '(' expression ')' optional_newline '{' body '}' condition_elif        { ADD_ST(KEYWORD, "if", "None"); DP(condition_if1); 
         T_Node *branch = t_create_node("if_content", $3.node, $7.node); $$.node = t_create_node("if", branch, $9.node); }
     ;
 
 condition_elif:
     condition_else        {DP(condition_elif1); $$.node = $1.node; }
     | NEWLINE condition_elif        {DP(condition_elif2); $$.node = $2.node; }
-    | CONDITION_ELIF '(' expression ')' optional_newline '{' body '}' condition_elif        {DP(condition_elif3); 
+    | CONDITION_ELIF '(' expression ')' optional_newline '{' body '}' condition_elif        {ADD_ST(KEYWORD, "elif", "None"); DP(condition_elif3); 
         T_Node *branch = t_create_node("elif_content", $3.node, $7.node); $$.node = t_create_node("elif", branch, $9.node); }
 
 condition_else:
                                                           {DP(condition_else0); $$.node = NULL; }
-    | CONDITION_ELSE optional_newline '{' body '}'        {DP(condition_else1); $$.node = $4.node; }
+    | CONDITION_ELSE optional_newline '{' body '}'        {ADD_ST(KEYWORD, "else", "None"); DP(condition_else1); $$.node = $4.node; }
     ;
 
 variable_declaration:
-    datatype IDENTIFIER '=' expression                                     {DP(variable_declaration1); 
+    datatype IDENTIFIER '=' expression                                     {ADD_ST(VARIABLE, $2.content, $1.content); DP(variable_declaration1); 
         T_Node *identifier = t_create_node($2.content, NULL, NULL); 
         T_Node *var_dec_ass = t_create_node("type", $1.node, identifier); 
         $$.node = t_create_node("var_declaration", var_dec_ass, $4.node); }
 
-    | CONSTANT datatype IDENTIFIER '=' expression                          {DP(variable_declaration2);
+    | CONSTANT datatype IDENTIFIER '=' expression                          {ADD_ST(CONSTANT, $3.content, $2.content); DP(variable_declaration2);
         T_Node *identifier = t_create_node($3.content, NULL, NULL); 
         T_Node *var_dec_ass = t_create_node("type", $2.node, identifier); 
         $$.node = t_create_node("var_declaration_const", var_dec_ass, $5.node); }
 
-    | datatype '[' expression ']' IDENTIFIER '=' expression                {DP(variable_declaration3); 
+    | datatype '[' expression ']' IDENTIFIER '=' expression                {ADD_ST(VARIABLE, $5.content, $1.content); DP(variable_declaration3); 
         T_Node *identifier = t_create_node($5.content, $3.node, NULL); 
         T_Node *var_dec_ass = t_create_node("type", $1.node, identifier); 
         $$.node = t_create_node("var_declaration", var_dec_ass, $7.node); } 
 
-    | CONSTANT datatype '[' expression ']' IDENTIFIER '=' expression       {DP(variable_declaration4); 
+    | CONSTANT datatype '[' expression ']' IDENTIFIER '=' expression       {ADD_ST(CONSTANT, $6.content, $2.content); DP(variable_declaration4); 
         T_Node *identifier = t_create_node($6.content, $4.node, NULL); 
         T_Node *var_dec_ass = t_create_node("type", $2.node, identifier); 
         $$.node = t_create_node("var_declaration_const", var_dec_ass, $8.node); } 
@@ -235,6 +242,7 @@ main(int argc, char** argv)
         yyparse();
         fclose(yyin);
         t_traverse(root);
+        ll_print_linked_list(symbol_table);
     }
     else {
         printf (">>> Please type in any input:\n");
@@ -244,26 +252,35 @@ main(int argc, char** argv)
 }
 
 void
-add_to_symbol_table(SymbolTableType type, const char* identifier, const char* var_type)
+add_to_symbol_table(SymbolTableType type, char* identifier, char* var_type)
 {
+    int lineno = yylineno-1;
+    dataType* symbol;
     switch(type)
     {
         case ST_VARIABLE:
-        printf("Variable");
-        printf("%s, ", var_type);
-        printf("%s\n", identifier);
+        symbol = ll_create_dataType(identifier, var_type, "Variable", lineno);
         break;
 
         case ST_CONSTANT:
-        printf("Constant\n");
+        symbol = ll_create_dataType(identifier, var_type, "Constant", lineno);
         break;
 
         case ST_KEYWORD:
-        printf("Keyword\n");
+        symbol = ll_create_dataType(identifier, var_type, "Keyword", lineno);
         break;
 
         case ST_FUNCTION:
+        symbol = ll_create_dataType(identifier, var_type, "Functions", lineno);
         break;
+    }
+
+    if(symbol_table == NULL)
+    {
+        symbol_table = ll_init_list(symbol);
+    } else
+    {
+        ll_add_value(symbol_table, symbol);
     }
 }
 

@@ -5,8 +5,9 @@
 	extern int yyerror(const char* s);
 	int yylineno;	
 	int yylex();
-	
 %}
+
+%option yylineno
 
 digit [0-9]
 alpha [a-zA-Z]
@@ -61,7 +62,7 @@ alpha [a-zA-Z]
 "!"                         { strcpy(yylval.token_obj.content, (yytext)); return ('!'); }
 ";"                         { strcpy(yylval.token_obj.content, (yytext)); return (';'); }
 
-[\n]                        { yylineno++; return (NEWLINE); }
+[\n]                        { return (NEWLINE); }
 #[^\n]* ;
 [ \t] ;
 . {yyerror("unknown symbol"); };
