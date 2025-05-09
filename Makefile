@@ -12,7 +12,7 @@ $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 
 # GCC
-$(OUT_DIR)/think: $(OUT_DIR)/lex.yy.c $(OUT_DIR)/grammar.tab.c $(SRC_DIR)/tree/tree.c
+$(OUT_DIR)/think: $(OUT_DIR)/lex.yy.c $(OUT_DIR)/grammar.tab.c $(SRC_DIR)/*/*.c
 	gcc $^ -o $(OUT_DIR)/think
 
 # LEX
