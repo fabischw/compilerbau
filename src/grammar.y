@@ -31,6 +31,8 @@
 
     LL_Node* symbol_table = NULL;
 
+    int error_count = 0;
+
 %}
 
 %union {
@@ -239,8 +241,8 @@ main(int argc, char** argv)
         yyin = fopen(argv[1], "r");
         yyparse();
         fclose(yyin);
-        t_traverse(root);
-        ll_print_linked_list(symbol_table);
+        //t_traverse(root);
+        //ll_print_linked_list(symbol_table);
     }
     else {
         printf (">>> Please type in any input:\n");
@@ -254,23 +256,36 @@ add_to_symbol_table(SymbolTableType type, char* identifier, char* var_type)
 {
     int lineno = yylineno-1;
     dataType* symbol;
-    switch(type)
+
+   switch(type)
     {
         case ST_VARIABLE:
-        symbol = ll_create_dataType(identifier, var_type, "Variable", lineno);
-        break;
+            if(ll_contains_value_id(symbol_table, identifier))
+            {
+                yyerror("Multiple Declaration!");
+                error_count++;
+                return;
+            }
+            symbol = ll_create_dataType(identifier, var_type, "Variable", lineno);
+            break;
 
         case ST_CONSTANT:
-        symbol = ll_create_dataType(identifier, var_type, "Constant", lineno);
-        break;
+            if(ll_contains_value_id(symbol_table, identifier))
+            {
+                yyerror("Multiple Declaration!");
+                error_count++;
+                return;
+            }
+            symbol = ll_create_dataType(identifier, var_type, "Constant", lineno);
+            break;
 
         case ST_KEYWORD:
-        symbol = ll_create_dataType(identifier, var_type, "Keyword", lineno);
-        break;
+            symbol = ll_create_dataType(identifier, var_type, "Keyword", lineno);
+            break;
 
         case ST_FUNCTION:
-        symbol = ll_create_dataType(identifier, var_type, "Functions", lineno);
-        break;
+            symbol = ll_create_dataType(identifier, var_type, "Functions", lineno);
+            break;
     }
 
     if(symbol_table == NULL)
@@ -285,6 +300,6 @@ add_to_symbol_table(SymbolTableType type, char* identifier, char* var_type)
 int
 yyerror(const char* s)
 {
-    fprintf(stderr, "Error in line: %d, %s\n", yylineno, s);
+    fprintf(stderr, "Error in line: %d, %s\n", yylineno-1, s);
     return 1;
 }

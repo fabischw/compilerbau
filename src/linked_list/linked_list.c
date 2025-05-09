@@ -21,6 +21,19 @@ LL_Node* ll_create_node(dataType* value) {
     return node;
 }
 
+int
+ll_contains_value_id(LL_Node* linked_list, char* id_name)
+{
+    if(linked_list == NULL) return 0;
+
+    while(linked_list)
+    {        
+    if(!strcmp(linked_list->value->id_name,id_name)) return 1;
+    linked_list = linked_list->next;
+    }
+
+    return 0;
+}
 
 LL_Node* ll_init_list(dataType* value) {
     return ll_create_node(value);

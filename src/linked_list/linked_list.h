@@ -15,6 +15,7 @@
 
     dataType* ll_create_dataType(char* id_name, char* data_type, char* type, int line_no);
     LL_Node* ll_create_node(dataType* value);
+    int ll_contains_value_id(LL_Node* linked_list, char* id_name);
     LL_Node* ll_init_list(dataType* value);
     void ll_add_node(LL_Node* linked_list, LL_Node* node);
     void ll_add_value(LL_Node* linked_list, dataType* value);
