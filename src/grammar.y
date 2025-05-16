@@ -3,35 +3,33 @@
 %{
     #include<stdio.h>
     #include<string.h>
+    #include<stdbool.h>
     #include "../src/tree/tree.h"
+    #include "../src/typing/typing.h"
     #include "../src/linked_list/linked_list.h"
     
     //#define DP(s) /*printf("->%s\n", #s)*/
     #define DP(s) (1)
+
+
 
     extern FILE* yyin;
     extern int yylineno;
     extern int yyerror(const char *s);
     extern int yylex();
 
-    typedef enum _SymbolTableType
-    {
-        ST_VARIABLE,
-        ST_CONSTANT,
-        ST_KEYWORD,
-        ST_FUNCTION,
-    } SymbolTableType;
-
-    void add_to_symbol_table(SymbolTableType type, const char* identifier, const char* var_type);
 
     T_Node* root;
+
+    int error_count = 0;
 
 %}
 
 %union {
     struct _token_obj {
         char content[100];
-        struct _t_node *node;
+        T_Node *node;
+        VarType type;
     } token_obj;
 }
 
@@ -122,7 +120,7 @@ variable_declaration:
         T_Node *var_dec_ass = t_create_node("type", $2.node, identifier); 
         $$.node = t_create_node("var_declaration_const", var_dec_ass, $5.node); }
 
-    | datatype '[' expression ']' IDENTIFIER '=' expression                {DP(variable_declaration3); 
+    | datatype '[' expression ']' IDENTIFIER '=' expression                {DP(variable_declaration3);
         T_Node *identifier = t_create_node($5.content, $3.node, NULL); 
         T_Node *var_dec_ass = t_create_node("type", $1.node, identifier); 
         $$.node = t_create_node("var_declaration", var_dec_ass, $7.node); } 
@@ -143,11 +141,37 @@ expression:
 
 assignment_expr:
     binary_expr                                     {DP(assignment_expr1); $$.node = $1.node; }
-    | postfix_expr PLUS_EQUAL assignment_expr       {DP(assignment_expr2); $$.node = t_create_node($2.content, $1.node, $3.node); }
-    | postfix_expr MINUS_EQUAL assignment_expr      {DP(assignment_expr3); $$.node = t_create_node($2.content, $1.node, $3.node); }
-    | postfix_expr MUL_EQUAL assignment_expr        {DP(assignment_expr4); $$.node = t_create_node($2.content, $1.node, $3.node); }
-    | postfix_expr DIV_EQUAL assignment_expr        {DP(assignment_expr5); $$.node = t_create_node($2.content, $1.node, $3.node); }
-    | postfix_expr '=' assignment_expr              {DP(assignment_expr6); $$.node = t_create_node($2.content, $1.node, $3.node); }
+    | IDENTIFIER PLUS_EQUAL assignment_expr       {DP(assignment_expr2); 
+        T_Node *identifier = t_create_node($1.content, NULL, NULL); 
+        $$.node = t_create_node($2.content, identifier, $3.node); }
+    | IDENTIFIER MINUS_EQUAL assignment_expr      {DP(assignment_expr3); 
+        T_Node *identifier = t_create_node($1.content, NULL, NULL); 
+        $$.node = t_create_node($2.content, identifier, $3.node); }
+    | IDENTIFIER MUL_EQUAL assignment_expr        {DP(assignment_expr4); 
+        T_Node *identifier = t_create_node($1.content, NULL, NULL); 
+        $$.node = t_create_node($2.content, identifier, $3.node); }
+    | IDENTIFIER DIV_EQUAL assignment_expr        {DP(assignment_expr5); 
+        T_Node *identifier = t_create_node($1.content, NULL, NULL); 
+        $$.node = t_create_node($2.content, identifier, $3.node); }
+    | IDENTIFIER '=' assignment_expr              {DP(assignment_expr6); 
+        T_Node *identifier = t_create_node($1.content, NULL, NULL); 
+        $$.node = t_create_node($2.content, identifier, $3.node); }
+
+    | IDENTIFIER '[' expression ']' PLUS_EQUAL assignment_expr       {DP(assignment_expr2); 
+        T_Node *identifier = t_create_node($1.content, $3.node, NULL); 
+        $$.node = t_create_node($5.content, identifier, $6.node); }
+    | IDENTIFIER '[' expression ']' MINUS_EQUAL assignment_expr      {DP(assignment_expr3); 
+        T_Node *identifier = t_create_node($1.content, $3.node, NULL); 
+        $$.node = t_create_node($5.content, identifier, $6.node); }
+    | IDENTIFIER '[' expression ']' MUL_EQUAL assignment_expr        {DP(assignment_expr4); 
+        T_Node *identifier = t_create_node($1.content, $3.node, NULL); 
+        $$.node = t_create_node($5.content, identifier, $6.node); }
+    | IDENTIFIER '[' expression ']' DIV_EQUAL assignment_expr        {DP(assignment_expr5); 
+        T_Node *identifier = t_create_node($1.content, $3.node, NULL); 
+        $$.node = t_create_node($5.content, identifier, $6.node); }
+    | IDENTIFIER '[' expression ']' '=' assignment_expr              {DP(assignment_expr6); 
+        T_Node *identifier = t_create_node($1.content, $3.node, NULL); 
+        $$.node = t_create_node($5.content, identifier, $6.node); }
     ;
 
 
@@ -155,12 +179,15 @@ binary_expr:
     unary_expr                                  {DP(binary_expr1); $$.node = $1.node; }
     | binary_expr AND binary_expr               {DP(binary_expr2); $$.node = t_create_node($2.content, $1.node, $3.node); }
     | binary_expr OR binary_expr                {DP(binary_expr3); $$.node = t_create_node($2.content, $1.node, $3.node); }
+
     | binary_expr IS_EQUAL binary_expr          {DP(binary_expr4); $$.node = t_create_node($2.content, $1.node, $3.node); }
+    | binary_expr NOT_EQUAL binary_expr         {DP(binary_expr7); $$.node = t_create_node($2.content, $1.node, $3.node); }
+
     | binary_expr LESS_EQUAL binary_expr        {DP(binary_expr5); $$.node = t_create_node($2.content, $1.node, $3.node); }
     | binary_expr GREATER_EQUAL binary_expr     {DP(binary_expr6); $$.node = t_create_node($2.content, $1.node, $3.node); }
-    | binary_expr NOT_EQUAL binary_expr         {DP(binary_expr7); $$.node = t_create_node($2.content, $1.node, $3.node); }
     | binary_expr '<' binary_expr               {DP(binary_expr8); $$.node = t_create_node($2.content, $1.node, $3.node); }
     | binary_expr '>' binary_expr               {DP(binary_expr9); $$.node = t_create_node($2.content, $1.node, $3.node); }
+
     | binary_expr '+' binary_expr               {DP(binary_expr10); $$.node = t_create_node($2.content, $1.node, $3.node); }
     | binary_expr '-' binary_expr               {DP(binary_expr11); $$.node = t_create_node($2.content, $1.node, $3.node); }
     | binary_expr '*' binary_expr               {DP(binary_expr12); $$.node = t_create_node($2.content, $1.node, $3.node); }
@@ -243,33 +270,10 @@ main(int argc, char** argv)
     return 0;
 }
 
-void
-add_to_symbol_table(SymbolTableType type, const char* identifier, const char* var_type)
-{
-    switch(type)
-    {
-        case ST_VARIABLE:
-        printf("Variable");
-        printf("%s, ", var_type);
-        printf("%s\n", identifier);
-        break;
-
-        case ST_CONSTANT:
-        printf("Constant\n");
-        break;
-
-        case ST_KEYWORD:
-        printf("Keyword\n");
-        break;
-
-        case ST_FUNCTION:
-        break;
-    }
-}
-
 int
 yyerror(const char* s)
 {
-    fprintf(stderr, "Error in line: %d, %s\n", yylineno, s);
+    fprintf(stderr, "Error in line: %d, %s\n", yylineno-1, s);
+    error_count++;
     return 1;
 }
