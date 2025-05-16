@@ -45,7 +45,7 @@
 %token <token_obj> PLUS_EQUAL MINUS_EQUAL MUL_EQUAL DIV_EQUAL
 %token <token_obj> '=' '+' '-' '*' '/' '%' '^' '<' '>' '!' ','
 
-%type <token_obj> program body statement loop_declaration condition_if condition_elif condition_else variable_declaration expression assignment_expr binary_expr unary_expr postfix_expr parameter_list primary_expr arr_expr arr_body datatype 
+%type <token_obj> program body statement_list statement loop_declaration condition_if condition_elif condition_else variable_declaration expression assignment_expr binary_expr unary_expr postfix_expr parameter_list primary_expr arr_expr arr_body datatype 
 
 %left OR
 %left AND
@@ -60,6 +60,7 @@
 %nonassoc UNOT 
 %nonassoc UMINUS
 
+
 %%
 
 // -- general ---
@@ -69,12 +70,24 @@ program:
     ;
 
 body:
-                                            {DP(body0); $$.node = NULL; }
-    | statement                             {DP(body1); $$.node = t_create_node("statement", $1.node, NULL); }
-    | NEWLINE body                          {DP(body2); $$.node = $2.node; }
-    | statement end_of_statement body		{DP(body3); $$.node = t_create_node("statement", $1.node, $3.node); }
+                                {DP(body0); $$.node = NULL; }
+    | statement_list                      {DP(body1); $$.node = $1.node; }
+    ;
+
+statement_list:
+    statement                                           {DP(body1); $$.node = t_create_node("statement", $1.node, NULL); }
+    | statement_list NEWLINE
+    | NEWLINE statement_list 
+    | statement_list statement_seperator statement 	    {DP(body3); $$.node = t_create_node("statement", $1.node, $3.node); }
     ;
 // note: body can be empty
+
+statement_seperator:
+    NEWLINE
+    | NEWLINE statement_seperator
+    | ';'
+    | ';' statement_seperator
+    ;
 
 // -- statements --
 
@@ -83,11 +96,6 @@ statement:
     | variable_declaration          {DP(statement2); $$.node = $1.node; }
     | condition_if                  {DP(statement3); $$.node = $1.node; }
     | loop_declaration              {DP(statement4); $$.node = $1.node; }
-    ;
-
-end_of_statement:
-    NEWLINE
-    | ';'
     ;
 
 loop_declaration:

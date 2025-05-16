@@ -31,10 +31,15 @@ c = (a && b)
 
 bool logic = (True || False) && flag && !flag
 
-if (flag) {
-	a = a + 7
-} elif (logic) {
+if (flag) { 
+	
+	a = a + 7 
+	
+} 
+elif (logic) {
+
 	a = a + 8
+
 } else {
 	print(mystring)
 }
