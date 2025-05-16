@@ -1,14 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "linked_list.h"
+#include "../typing/typing.h"
 
 
-dataType* ll_create_dataType(char* id_name, char* data_type, char* type, int line_no) {
+dataType* ll_create_dataType(char* id_name, VarType var_type, bool is_constant, int line_no) {
     dataType* dt = malloc(sizeof(dataType));
     dt->id_name = strdup(id_name);
-    dt->data_type = strdup(data_type);
-    dt->type = strdup(type);
+    dt->var_type = var_type; 
+    dt->is_constant = is_constant;
     dt->line_no = line_no;
     return dt;
 }
@@ -66,8 +68,6 @@ LL_Node* ll_get_last_node(LL_Node* linked_list) {
 void ll_free_dataType(dataType* dt) {
     dataType dt_val = *dt;
     free(dt_val.id_name);
-    free(dt_val.data_type);
-    free(dt_val.type);
     free(dt);
 }
 
@@ -94,10 +94,10 @@ void ll_print_linked_list(LL_Node* linked_list) {
     // print entire linked list (used for debugging)
     LL_Node* current = linked_list;
     while (current != NULL) {
-        printf("value: (id_name: %s | data_type: %s | type: %s | line: %d)\n",
+        printf("value: (id_name: %s | var_type: %s | is_constant: %d | line: %d)\n",
                 current->value->id_name,
-                current->value->data_type,
-                current->value->type,
+                vartype_to_string(current->value->var_type),
+                current->value->is_constant,
                 current->value->line_no);
         current = current->next;
     }

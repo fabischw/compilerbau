@@ -1,6 +1,10 @@
 %option noyywrap
 
 %{
+	#include <stdbool.h>
+	#include "../src/typing/typing.h"
+    #include "../src/tree/tree.h"
+    #include "../src/linked_list/linked_list.h"
 	#include "grammar.tab.h"
 	extern int yyerror(const char* s);
 	int yylineno;	
