@@ -11,7 +11,6 @@
     //#define DP(s) /*printf("->%s\n", #s)*/
     #define DP(s) (1)
 
-    //#define ADD_ST(type, id, const) add_to_symbol_table(id, TYPE_##type, const)
 
 
     extern FILE* yyin;
@@ -20,11 +19,7 @@
     extern int yylex();
 
 
-    void add_to_symbol_table(char* id_name, VarType var_type, bool is_constant);
-
     T_Node* root;
-
-    LL_Node* symbol_table = NULL;
 
     int error_count = 0;
 
@@ -210,7 +205,7 @@ unary_expr:
 
 
 postfix_expr:
-    primary_expr                            {DP(postfix_expr1); $$.node = $1.node; $$.type = $1.type; }
+    primary_expr                            {DP(postfix_expr1); $$.node = $1.node; }
     | postfix_expr '[' expression ']'       {DP(postfix_expr2); $$.node = t_create_node("indexing", $1.node, $3.node); } 
     | postfix_expr '(' parameter_list ')'    {DP(postfix_expr3); $$.node = t_create_node("function_call", $1.node, $3.node); }
     | postfix_expr '(' ')'                  {DP(postfix_expr4); $$.node = t_create_node("function_call", $1.node, NULL); }
@@ -267,7 +262,6 @@ main(int argc, char** argv)
         yyparse();
         fclose(yyin);
         t_traverse(root);
-        ll_print_linked_list(symbol_table);
     }
     else {
         printf (">>> Please type in any input:\n");
