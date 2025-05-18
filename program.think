@@ -35,7 +35,7 @@ if (flag) {
 	
 	a = a + 7 
 	
-} 
+}
 elif (logic) {
 
 	a = a + 8
@@ -45,8 +45,12 @@ elif (logic) {
 }
 
 while(a > 0) {
-	if (a > 10) { a = 10}
-	elif ( a > 20) { a = -1 }
+	if (a > 10) { 
+		a = 10 
+	}
+	elif ( a > 20) { 
+		a = -1 
+	}
 }
 
 while ( a < 0 ) {

@@ -136,7 +136,7 @@ variable_declaration:
     | CONSTANT datatype IDENTIFIER '=' expression                          {DP(variable_declaration2);
         T_Node *identifier = ast_node(ast_IDENTIFIER, $3.content, NULL, NULL);
         T_Node *assignment = ast_node(ast_assignment, "=", identifier, $5.node); 
-        $$.node = ast_node(ast_variable_declaration, NULL, $2.node, assignment); }
+        $$.node = ast_node(ast_variable_declaration_const, NULL, $2.node, assignment); }
 
     | datatype '[' expression ']' IDENTIFIER '=' expression                {DP(variable_declaration3);
         T_Node *identifier = ast_node(ast_IDENTIFIER, $5.content, NULL, NULL);
@@ -148,7 +148,7 @@ variable_declaration:
         T_Node *identifier = ast_node(ast_IDENTIFIER, $6.content, NULL, NULL);
         T_Node *array_declaration = ast_node(ast_array_declaration, NULL, $2.node, $4.node);
         T_Node *assignment = ast_node(ast_assignment, "=", identifier, $8.node); 
-        $$.node = ast_node(ast_variable_declaration, NULL, array_declaration, assignment); } 
+        $$.node = ast_node(ast_variable_declaration_const, NULL, array_declaration, assignment); } 
     ;
     
     /* TODO: allow only compiletime expressions for const values */
