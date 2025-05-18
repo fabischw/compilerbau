@@ -9,7 +9,7 @@
     #include "../src/linked_list/linked_list.h"
     #include "../src/tree/ast_type.h"
     
-    //#define DP(s) /*printf("->%s\n", #s)*/
+    //#define DP(s) printf("->%s\n", #s)
     #define DP(s) (1)
 
 
@@ -47,7 +47,7 @@
 %token <token_obj> PLUS_EQUAL MINUS_EQUAL MUL_EQUAL DIV_EQUAL
 %token <token_obj> '=' '+' '-' '*' '/' '%' '^' '<' '>' '!' ','
 
-%type <token_obj> program body statement_list statement loop_declaration condition_if condition_elif condition_else variable_declaration expression assignment_expr binary_expr unary_expr postfix_expr parameter_list primary_expr arr_expr arr_body datatype 
+%type <token_obj> program body statement statement_list loop_declaration condition_if condition_elif condition_else variable_declaration expression assignment_expr binary_expr unary_expr postfix_expr parameter_list primary_expr arr_expr arr_body datatype 
 
 %left OR
 %left AND
@@ -72,16 +72,18 @@ program:
     ;
 
 body:
-                                {DP(body0); $$.node = NULL; }
-    | statement_list                      {DP(body1); $$.node = $1.node; }
+                                            {DP(body1); $$.node = NULL; }
+    | statement_seperator_optional statement statement_seperator_optional                       {DP(body2); $$.node = $2.node; }
+    | statement_seperator_optional statement_list statement statement_seperator_optional    {DP(body3); $$.node = ast_node(ast_statement, NULL, $3.node, $2.node); }
     ;
 
+// | body statement_seperator statement            {DP(body4); $$.node =  }
+
 statement_list:
-    statement                                           {DP(body1); $$.node = ast_node(ast_statement, NULL, $1.node, NULL); }
-    | statement_list NEWLINE                            {DP(body2); $$.node = $1.node; }
-    | NEWLINE statement_list                            {DP(body3); $$.node = $2.node; }
-    | statement_list statement_seperator statement 	    {DP(body4); $$.node = ast_node(ast_statement, NULL, $3.node, $1.node); }
+    statement_list statement statement_seperator    {DP(statement_list1); $$.node = ast_node(ast_statement, NULL, $2.node, $1.node); }
+    | statement statement_seperator                 {DP(statement_list2); $$.node = $1.node; }
     ;
+
 // note: body can be empty
 
 statement_seperator:
@@ -89,6 +91,10 @@ statement_seperator:
     | NEWLINE statement_seperator
     | ';'
     | ';' statement_seperator
+    ;
+
+statement_seperator_optional:
+    | statement_seperator
     ;
 
 // -- statements --
@@ -134,13 +140,15 @@ variable_declaration:
 
     | datatype '[' expression ']' IDENTIFIER '=' expression                {DP(variable_declaration3);
         T_Node *identifier = ast_node(ast_IDENTIFIER, $5.content, NULL, NULL);
+        T_Node *array_declaration = ast_node(ast_array_declaration, NULL, $1.node, $3.node);
         T_Node *assignment = ast_node(ast_assignment, "=", identifier, $7.node); 
-        $$.node = ast_node(ast_variable_declaration, NULL, $1.node, assignment); } 
+        $$.node = ast_node(ast_variable_declaration, NULL, array_declaration, assignment); } 
 
     | CONSTANT datatype '[' expression ']' IDENTIFIER '=' expression       {DP(variable_declaration4); 
         T_Node *identifier = ast_node(ast_IDENTIFIER, $6.content, NULL, NULL);
+        T_Node *array_declaration = ast_node(ast_array_declaration, NULL, $2.node, $4.node);
         T_Node *assignment = ast_node(ast_assignment, "=", identifier, $8.node); 
-        $$.node = ast_node(ast_variable_declaration, NULL, $2.node, assignment); } 
+        $$.node = ast_node(ast_variable_declaration, NULL, array_declaration, assignment); } 
     ;
     
     /* TODO: allow only compiletime expressions for const values */
@@ -153,23 +161,18 @@ expression:
 
 assignment_expr:
     binary_expr                                     {DP(assignment_expr1); $$.node = $1.node; }
-    | IDENTIFIER PLUS_EQUAL assignment_expr       {DP(assignment_expr2); 
-        T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
-        $$.node = ast_node(ast_assignment, $2.content, identifier, $3.node); }
-    | IDENTIFIER MINUS_EQUAL assignment_expr      {DP(assignment_expr3); 
-        T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
-        $$.node = ast_node(ast_assignment, $2.content, identifier, $3.node); }
-    | IDENTIFIER MUL_EQUAL assignment_expr        {DP(assignment_expr4); 
-        T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
-        $$.node = ast_node(ast_assignment, $2.content, identifier, $3.node); }
-    | IDENTIFIER DIV_EQUAL assignment_expr        {DP(assignment_expr5); 
-        T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
-        $$.node = ast_node(ast_assignment, $2.content, identifier, $3.node); }
-    | IDENTIFIER '=' assignment_expr              {DP(assignment_expr6); 
-        T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
-        $$.node = ast_node(ast_assignment, $2.content, identifier, $3.node); }
+    | postfix_expr PLUS_EQUAL assignment_expr       {DP(assignment_expr2); 
+        $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); }
+    | postfix_expr MINUS_EQUAL assignment_expr      {DP(assignment_expr3); 
+        $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); }
+    | postfix_expr MUL_EQUAL assignment_expr        {DP(assignment_expr4); 
+        $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); }
+    | postfix_expr DIV_EQUAL assignment_expr        {DP(assignment_expr5); 
+        $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); }
+    | postfix_expr '=' assignment_expr              {DP(assignment_expr6); 
+        $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); }
 
-    | IDENTIFIER '[' expression ']' PLUS_EQUAL assignment_expr       {DP(assignment_expr7); 
+/*    | IDENTIFIER '[' expression ']' PLUS_EQUAL assignment_expr       {DP(assignment_expr7); 
         T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
         T_Node *array_indexing = ast_node(ast_array_indexing, NULL, identifier, $3.node);
         $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); }
@@ -188,7 +191,7 @@ assignment_expr:
     | IDENTIFIER '[' expression ']' '=' assignment_expr              {DP(assignment_expr11); 
         T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
         T_Node *array_indexing = ast_node(ast_array_indexing, NULL, identifier, $3.node);
-        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); }
+        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); }*/
     ;
 
 

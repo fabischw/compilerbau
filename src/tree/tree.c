@@ -13,7 +13,7 @@ t_create_node(AstType ast_type, char* value, int lineno, T_Node* leftNode, T_Nod
   node->leftNode = leftNode;
   node->rightNode = rightNode;
   node->ast_type = ast_type;
-  node->value = strdup(value);
+  node->value = value ? strdup(value) : NULL;
   node->is_constant = false;
   node->var_type = TYP_UNKNOWN;
   node->lineno = lineno;
@@ -42,18 +42,16 @@ t_traverse_(T_Node* root, int depth)
 {
   if(root == NULL)
   {
-    for(int i = 0; i < depth; i++) printf("    ");
-    printf("\n");
+    /*for(int i = 0; i < depth; i++) printf("  ");
+    printf("\n");*/
     return;
   }
   t_traverse_(root->leftNode, depth+1);
-  for(int i = 0; i < depth; i++) printf("    ");
-  if(strlen(root->value) == 0)
-  {
-    printf("EMPTY\n");
-  } else
-  {
-    printf("%s\n", root->value);
+  for(int i = 0; i < depth; i++) printf("  ");
+  printf("%s", ast_type_to_string(root->ast_type));
+  if (root->value) {
+    printf(" \"%s\"", root->value);
   }
+  printf("\n");
   t_traverse_(root->rightNode, depth+1);
 }

@@ -29,4 +29,6 @@
         ast_array_item
     } AstType;
 
+    const char* ast_type_to_string(AstType type);
+
 #endif

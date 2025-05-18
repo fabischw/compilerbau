@@ -66,3 +66,7 @@ int[10] prims = [3, 5, 7]
 prims[3] = 11
 
 
+myarr[3]
+
+
+fun()[1]
