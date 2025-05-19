@@ -31,26 +31,17 @@ c = (a && b)
 
 bool logic = (True || False) && flag && !flag
 
-if (flag) { 
-	
-	a = a + 7 
-	
-}
-elif (logic) {
-
+if (flag) {
+	a = a + 7
+} elif (logic) {
 	a = a + 8
-
 } else {
 	print(mystring)
 }
 
 while(a > 0) {
-	if (a > 10) { 
-		a = 10 
-	}
-	elif ( a > 20) { 
-		a = -1 
-	}
+	if (a > 10) { a = 10}
+	elif ( a > 20) { a = -1 }
 }
 
 while ( a < 0 ) {
@@ -70,7 +61,3 @@ int[10] prims = [3, 5, 7]
 prims[3] = 11
 
 
-myarr[3]
-
-
-fun()[1]
