@@ -27,5 +27,6 @@
     void ll_remove_last_node(LL_Node* linked_list);
     void ll_free_list(LL_Node* linked_list);
     void ll_print_linked_list(LL_Node* linked_list);
+    dataType* ll_get_by_value_id(LL_Node* linked_list, char* id_name);
 
 #endif

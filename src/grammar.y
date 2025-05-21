@@ -8,6 +8,7 @@
     #include "../src/typing/typing.h"
     #include "../src/linked_list/linked_list.h"
     #include "../src/tree/ast_type.h"
+    #include "../src/semantic_analysis/semantic_analysis.h"
     
     //#define DP(s) printf("->%s\n", #s)
     #define DP(s) (1)
@@ -22,6 +23,7 @@
 
 
     T_Node* root;
+    LL_Node* symbol_table;
 
     int error_count = 0;
 
@@ -272,11 +274,11 @@ arr_body:
     | arr_body ',' expression       {DP(arr_body2); $$.node = ast_node(ast_array_item, NULL, $3.node, $1.node); }
 
 datatype:
-    TYPE_INT        {DP(datatype1); $$.node = ast_node(ast_datatype, $1.content, NULL, NULL); }
-    | TYPE_FLOAT    {DP(datatype2); $$.node = ast_node(ast_datatype, $1.content, NULL, NULL); }
-    | TYPE_BOOL     {DP(datatype3); $$.node = ast_node(ast_datatype, $1.content, NULL, NULL); }
-    | TYPE_STR      {DP(datatype4); $$.node = ast_node(ast_datatype, $1.content, NULL, NULL); }
-    | TYPE_CHAR     {DP(datatype5); $$.node = ast_node(ast_datatype, $1.content, NULL, NULL); }
+    TYPE_INT        {DP(datatype1); $$.node = ast_node(ast_datatype, $1.content, NULL, NULL); $$.node->var_type = TYP_INT; }
+    | TYPE_FLOAT    {DP(datatype2); $$.node = ast_node(ast_datatype, $1.content, NULL, NULL); $$.node->var_type = TYP_FLOAT; }
+    | TYPE_BOOL     {DP(datatype3); $$.node = ast_node(ast_datatype, $1.content, NULL, NULL); $$.node->var_type = TYP_BOOLEAN; }
+    | TYPE_STR      {DP(datatype4); $$.node = ast_node(ast_datatype, $1.content, NULL, NULL); $$.node->var_type = TYP_STRING; }
+    | TYPE_CHAR     {DP(datatype5); $$.node = ast_node(ast_datatype, $1.content, NULL, NULL); $$.node->var_type = TYP_CHARACTER; }
     ;
 
 optional_newline:
@@ -298,9 +300,14 @@ main(int argc, char** argv)
         yydebug = 0;
         yyin = fopen(argv[1], "r");
         yyparse();
-        //semantic_analysis(root);
-        fclose(yyin);
+        printf("--- AST Created ---\n");
         t_traverse(root);
+        printf("--- Begin Type Checking ---\n");
+        symbol_table = ll_create_node(ll_create_dataType("",TYP_NULL,false,-1));
+        semantic_analysis(root, symbol_table);
+        printf("--- Type Checking Done ---\n");
+        ll_print_linked_list(symbol_table);
+        fclose(yyin);
     }
     else {
         printf (">>> Please type in any input:\n");

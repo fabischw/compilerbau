@@ -26,6 +26,7 @@ vartype_to_string(VarType var_type) {
         case TYP_ARRAY_CHARACTER: return "character[]";
         case TYP_ARRAY_BOOLEAN: return "boolean[]";
         case TYP_ARRAY_FLOAT: return "float[]";
+        case TYP_ARRAY_EMPTY: return "empty[]";
         default: return "unknown";
     }
 }
@@ -43,4 +44,15 @@ unwrap_array_type(VarType var_type) {
 
 bool is_vartype_numeric(VarType var_type) {
     return (var_type == TYP_CHARACTER || var_type == TYP_INT || var_type == TYP_FLOAT);
+}
+
+bool is_vartype_array(VarType var_type) {
+    return (
+        var_type == TYP_ARRAY_BOOLEAN ||
+        var_type == TYP_ARRAY_CHARACTER ||
+        var_type == TYP_ARRAY_FLOAT ||
+        var_type == TYP_ARRAY_INT ||
+        var_type == TYP_ARRAY_STRING ||
+        var_type == TYP_ARRAY_EMPTY
+    );
 }

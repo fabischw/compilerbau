@@ -1,23 +1,32 @@
 #include "semantic_analysis.h"
 #include "../tree/tree.h"
 #include "../tree/ast_type.h"
+#include "../linked_list/linked_list.h"
 #include <stdio.h>
 
-int sem_postorder(T_Node* ast_node) {
+
+int sem_error(const char* s, T_Node* ast_node);
+
+int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
+    if (ast_node == NULL) return 0;
     int errCount = 0;
 
     if (!(  // don't do postorder traversal for some node types
         ast_node->ast_type == ast_variable_declaration ||
         ast_node->ast_type == ast_variable_declaration_const
     )) {
-        errCount += sem_postorder(ast_node->rightNode);
-        errCount += sem_postorder(ast_node->leftNode);
+        errCount += sem_postorder(ast_node->rightNode, symbol_table);
+        errCount += sem_postorder(ast_node->leftNode, symbol_table);
     } 
+
+    printf("=== %s\n", ast_type_to_string(ast_node->ast_type));
     
     VarType leftType = (ast_node->leftNode) ? ast_node->leftNode->var_type : TYP_NULL;
     VarType rightType = (ast_node->rightNode) ? ast_node->rightNode->var_type : TYP_NULL;
 
     bool _decl_is_const = false;
+    char* identifier;
+    VarType var_type;
 
     switch (ast_node->ast_type)
     {
@@ -95,33 +104,96 @@ int sem_postorder(T_Node* ast_node) {
             // if not add to symbol table
             // then do traversal
             // then do typechecking
-            char* identifier = ast_node->rightNode->leftNode->value;
-            if (ast_node->leftNode->ast_type == ast_array_declaration) {
+            identifier = ast_node->rightNode->leftNode->value;
+            dataType* symbol;
 
-            } else {
-                
+            if (ll_contains_value_id(symbol_table, identifier)) {
+                char temp[100];
+                sprintf(temp,"Symbol '%s' already defined", identifier);
+                sem_error(temp, ast_node);
+                break;
             }
 
+            if (ast_node->leftNode->ast_type == ast_array_declaration) {
+                var_type = wrap_with_array_type(ast_node->leftNode->leftNode->ast_type);
+                sem_postorder(ast_node->leftNode->rightNode, symbol_table); // check array length expression
+            } else {
+                var_type = ast_node->leftNode->var_type;
+            }
+            symbol = ll_create_dataType(identifier, var_type, _decl_is_const, ast_node->lineno);
+            ll_add_value(symbol_table, symbol);
+            sem_postorder(ast_node->rightNode, symbol_table); // check right side expression
+            break;
 
         case ast_assignment:
-            // check if trying to assign to constant
-
-        case ast_array_indexing:
+            // TODO check if symbol is constant
+            if (leftType != rightType) {
+                char temp[100];
+                sprintf(temp, "Cannot assign %s to %s", vartype_to_string(rightType), vartype_to_string(leftType));
+                sem_error(temp, ast_node);
+            }
+            ast_node->var_type = leftType;
+            break;
 
         case ast_IDENTIFIER:
+            identifier = ast_node->value;
+            if (!ll_contains_value_id(symbol_table, identifier)) {
+                char temp[100];
+                sprintf(temp, "Symbol '%s' not defined", identifier);
+                sem_error(temp, ast_node);
+                break;
+            }
+            var_type = ll_get_by_value_id(symbol_table, identifier)->var_type;
+            ast_node->var_type = var_type;
+            break;
+        case ast_array_indexing:
+            if (!is_vartype_array(leftType)) {
+                sem_error("Can only index array type", ast_node);
+            }
+            if (rightType != TYP_INT || rightType != TYP_CHARACTER) {
+                sem_error("Expected integer or character as array index", ast_node);
+            }
+            ast_node->var_type = unwrap_array_type(ast_node->var_type);
+            break;
+
         case ast_function_call:
-            
+        case ast_parameters:
+            // TODO
+            break;
 
 
         case ast_array_declaration:
-        case ast_parameters:
+            sem_error("This statement should not be encountered", ast_node);
+            break;
         case ast_array:
+            if (ast_node->leftNode == NULL) {
+                ast_node->ast_type = TYP_ARRAY_EMPTY;
+            } else {
+                ast_node->ast_type = wrap_with_array_type(leftType);
+            }
+            break;
+
         case ast_array_item:
+            if (rightType != TYP_NULL && leftType != rightType) {
+                sem_error("Expected array items to be of same type", ast_node);
+            }
+            ast_node->ast_type = leftType;
+            break;
+
+        case ast_loop_declaration:
+            if (leftType != TYP_BOOLEAN) {
+                sem_error("Loop condition expects Boolean", ast_node);
+            }
+            break;
+
+        case ast_condition_content:
+            if (leftType != TYP_BOOLEAN) {
+                sem_error("If condition expects Boolean", ast_node);
+            }
+            break;
         
         case ast_statement:
-        case ast_loop_declaration:
         case ast_condition_if:
-        case ast_condition_content:
         case ast_condition_elif:
         case ast_condition_else:
             break;
@@ -131,8 +203,8 @@ int sem_postorder(T_Node* ast_node) {
     }
 }
 
-int semantic_analysis(T_Node* ast_root) {
-    printf("a");
+int semantic_analysis(T_Node* ast_root, LL_Node* symbol_table) {
+    sem_postorder(ast_root, symbol_table);
     return 0;
 }
 
