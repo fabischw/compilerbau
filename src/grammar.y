@@ -45,19 +45,19 @@
 %token <token_obj> LESS_EQUAL GREATER_EQUAL IS_EQUAL NOT_EQUAL
 %token <token_obj> NEWLINE
 %token <token_obj> PLUS_EQUAL MINUS_EQUAL MUL_EQUAL DIV_EQUAL
-%token <token_obj> '=' '+' '-' '*' '/' '%' '^' '<' '>' '!' ','
+%token <token_obj> EQUAL PLUS MINUS MULT DIV MODULO EXP LESS GREATER BANG ','
 
 %type <token_obj> program body statement statement_list loop_declaration condition_if condition_elif condition_else variable_declaration expression assignment_expr binary_expr unary_expr postfix_expr parameter_list primary_expr arr_expr arr_body datatype 
 
 %left OR
 %left AND
 %nonassoc IS_EQUAL NOT_EQUAL
-%nonassoc LESS_EQUAL GREATER_EQUAL '<' '>'
+%nonassoc LESS_EQUAL GREATER_EQUAL LESS GREATER
 
-%left '=' PLUS_EQUAL MINUS_EQUAL MUL_EQUAL DIV_EQUAL
-%left '+' '-'
-%left '*' '/' '%'
-%right '^'
+%left EQUAL PLUS_EQUAL MINUS_EQUAL MUL_EQUAL DIV_EQUAL
+%left PLUS MINUS
+%left MULT DIV MODULO
+%right EXP
 
 %nonassoc UNOT 
 %nonassoc UMINUS
@@ -128,27 +128,31 @@ condition_else:
     ;
 
 variable_declaration:
-    datatype IDENTIFIER '=' expression                                     {DP(variable_declaration1); 
+    datatype IDENTIFIER EQUAL expression                                     {DP(variable_declaration1); 
         T_Node *identifier = ast_node(ast_IDENTIFIER, $2.content, NULL, NULL);
         T_Node *assignment = ast_node(ast_assignment, "=", identifier, $4.node); 
-        $$.node = ast_node(ast_variable_declaration, NULL, $1.node, assignment); }
+        $$.node = ast_node(ast_variable_declaration, NULL, $1.node, assignment); 
+        $$.node->operator = OP_EQUAL; }
 
-    | CONSTANT datatype IDENTIFIER '=' expression                          {DP(variable_declaration2);
+    | CONSTANT datatype IDENTIFIER EQUAL expression                          {DP(variable_declaration2);
         T_Node *identifier = ast_node(ast_IDENTIFIER, $3.content, NULL, NULL);
         T_Node *assignment = ast_node(ast_assignment, "=", identifier, $5.node); 
-        $$.node = ast_node(ast_variable_declaration_const, NULL, $2.node, assignment); }
+        $$.node = ast_node(ast_variable_declaration_const, NULL, $2.node, assignment); 
+        $$.node->operator = OP_EQUAL; }
 
-    | datatype '[' expression ']' IDENTIFIER '=' expression                {DP(variable_declaration3);
+    | datatype '[' expression ']' IDENTIFIER EQUAL expression                {DP(variable_declaration3);
         T_Node *identifier = ast_node(ast_IDENTIFIER, $5.content, NULL, NULL);
         T_Node *array_declaration = ast_node(ast_array_declaration, NULL, $1.node, $3.node);
         T_Node *assignment = ast_node(ast_assignment, "=", identifier, $7.node); 
-        $$.node = ast_node(ast_variable_declaration, NULL, array_declaration, assignment); } 
+        $$.node = ast_node(ast_variable_declaration, NULL, array_declaration, assignment); 
+        $$.node->operator = OP_EQUAL; } 
 
-    | CONSTANT datatype '[' expression ']' IDENTIFIER '=' expression       {DP(variable_declaration4); 
+    | CONSTANT datatype '[' expression ']' IDENTIFIER EQUAL expression       {DP(variable_declaration4); 
         T_Node *identifier = ast_node(ast_IDENTIFIER, $6.content, NULL, NULL);
         T_Node *array_declaration = ast_node(ast_array_declaration, NULL, $2.node, $4.node);
         T_Node *assignment = ast_node(ast_assignment, "=", identifier, $8.node); 
-        $$.node = ast_node(ast_variable_declaration_const, NULL, array_declaration, assignment); } 
+        $$.node = ast_node(ast_variable_declaration_const, NULL, array_declaration, assignment); 
+        $$.node->operator = OP_EQUAL; } 
     ;
     
     /* TODO: allow only compiletime expressions for const values */
@@ -162,65 +166,75 @@ expression:
 assignment_expr:
     binary_expr                                     {DP(assignment_expr1); $$.node = $1.node; }
     | postfix_expr PLUS_EQUAL assignment_expr       {DP(assignment_expr2); 
-        $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); }
+        $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); 
+        $$.node->operator = OP_PLUS_EQUAL; }
     | postfix_expr MINUS_EQUAL assignment_expr      {DP(assignment_expr3); 
-        $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); }
+        $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); 
+        $$.node->operator = OP_MINUS_EQUAL; }
     | postfix_expr MUL_EQUAL assignment_expr        {DP(assignment_expr4); 
-        $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); }
+        $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); 
+        $$.node->operator = OP_MUL_EQUAL; }
     | postfix_expr DIV_EQUAL assignment_expr        {DP(assignment_expr5); 
-        $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); }
-    | postfix_expr '=' assignment_expr              {DP(assignment_expr6); 
-        $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); }
+        $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); 
+        $$.node->operator = OP_DIV_EQUAL; }
+    | postfix_expr EQUAL assignment_expr              {DP(assignment_expr6); 
+        $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); 
+        $$.node->operator = OP_EQUAL; }
 
 /*    | IDENTIFIER '[' expression ']' PLUS_EQUAL assignment_expr       {DP(assignment_expr7); 
         T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
         T_Node *array_indexing = ast_node(ast_array_indexing, NULL, identifier, $3.node);
-        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); }
+        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); 
+        $$.node->operator = OP_PLUS_EQUAL; }
     | IDENTIFIER '[' expression ']' MINUS_EQUAL assignment_expr      {DP(assignment_expr8); 
         T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
         T_Node *array_indexing = ast_node(ast_array_indexing, NULL, identifier, $3.node);
-        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); }
+        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); 
+        $$.node->operator = OP_MINUS_EQUAL; }
     | IDENTIFIER '[' expression ']' MUL_EQUAL assignment_expr        {DP(assignment_expr9); 
         T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
         T_Node *array_indexing = ast_node(ast_array_indexing, NULL, identifier, $3.node);
-        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); }
+        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); 
+        $$.node->operator = OP_MUL_EQUAL; }
     | IDENTIFIER '[' expression ']' DIV_EQUAL assignment_expr        {DP(assignment_expr10); 
         T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
         T_Node *array_indexing = ast_node(ast_array_indexing, NULL, identifier, $3.node);
-        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); }
-    | IDENTIFIER '[' expression ']' '=' assignment_expr              {DP(assignment_expr11); 
+        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); 
+        $$.node->operator = OP_DIV_EQUAL; }
+    | IDENTIFIER '[' expression ']' EQUAL assignment_expr              {DP(assignment_expr11); 
         T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
         T_Node *array_indexing = ast_node(ast_array_indexing, NULL, identifier, $3.node);
-        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); }*/
+        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); 
+        $$.node->operator = OP_EQUAL; }*/
     ;
 
 
 binary_expr:
     unary_expr                                  {DP(binary_expr1); $$.node = $1.node; }
-    | binary_expr AND binary_expr               {DP(binary_expr2); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); }
-    | binary_expr OR binary_expr                {DP(binary_expr3); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); }
+    | binary_expr AND binary_expr               {DP(binary_expr2); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_AND; }
+    | binary_expr OR binary_expr                {DP(binary_expr3); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_OR; }
 
-    | binary_expr IS_EQUAL binary_expr          {DP(binary_expr4); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); }
-    | binary_expr NOT_EQUAL binary_expr         {DP(binary_expr7); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); }
+    | binary_expr IS_EQUAL binary_expr          {DP(binary_expr4); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_IS_EQUAL; }
+    | binary_expr NOT_EQUAL binary_expr         {DP(binary_expr7); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_NOT_EQUAL; }
 
-    | binary_expr LESS_EQUAL binary_expr        {DP(binary_expr5); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); }
-    | binary_expr GREATER_EQUAL binary_expr     {DP(binary_expr6); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); }
-    | binary_expr '<' binary_expr               {DP(binary_expr8); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); }
-    | binary_expr '>' binary_expr               {DP(binary_expr9); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); }
+    | binary_expr LESS_EQUAL binary_expr        {DP(binary_expr5); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_LESS_EQUAL; }
+    | binary_expr GREATER_EQUAL binary_expr     {DP(binary_expr6); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_GREATER_EQUAL; }
+    | binary_expr LESS binary_expr               {DP(binary_expr8); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_LESS; }
+    | binary_expr GREATER binary_expr               {DP(binary_expr9); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_GREATER; }
 
-    | binary_expr '+' binary_expr               {DP(binary_expr10); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); }
-    | binary_expr '-' binary_expr               {DP(binary_expr11); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); }
-    | binary_expr '*' binary_expr               {DP(binary_expr12); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); }
-    | binary_expr '/' binary_expr               {DP(binary_expr13); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); }
-    | binary_expr '^' binary_expr               {DP(binary_expr14); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); }
-    | binary_expr '%' binary_expr               {DP(binary_expr15); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); }
+    | binary_expr PLUS binary_expr               {DP(binary_expr10); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_PLUS; }
+    | binary_expr MINUS binary_expr               {DP(binary_expr11); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_MINUS; }
+    | binary_expr MULT binary_expr               {DP(binary_expr12); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_MULT; }
+    | binary_expr DIV binary_expr               {DP(binary_expr13); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_DIV; }
+    | binary_expr EXP binary_expr               {DP(binary_expr14); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_EXP; }
+    | binary_expr MODULO binary_expr               {DP(binary_expr15); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_MODULO; }
     ;
 
 unary_expr:
     postfix_expr            {DP(unary_expr1); $$.node = $1.node; }
-    | '-' unary_expr        {DP(unary_expr2); $$.node = ast_node(ast_unary_expression, $1.content, $2.node, NULL); }
-    | '+' unary_expr        {DP(unary_expr3); $$.node = ast_node(ast_unary_expression, $1.content, $2.node, NULL); }
-    | '!' unary_expr        {DP(unary_expr4); $$.node = ast_node(ast_unary_expression, $1.content, $2.node, NULL); }
+    | MINUS unary_expr        {DP(unary_expr2); $$.node = ast_node(ast_unary_expression, $1.content, $2.node, NULL); $$.node->operator = OP_MINUS; }
+    | PLUS unary_expr        {DP(unary_expr3); $$.node = ast_node(ast_unary_expression, $1.content, $2.node, NULL); $$.node->operator = OP_PLUS; }
+    | BANG unary_expr        {DP(unary_expr4); $$.node = ast_node(ast_unary_expression, $1.content, $2.node, NULL); $$.node->operator = OP_BANG; }
     ;
 
 
@@ -284,6 +298,7 @@ main(int argc, char** argv)
         yydebug = 0;
         yyin = fopen(argv[1], "r");
         yyparse();
+        //semantic_analysis(root);
         fclose(yyin);
         t_traverse(root);
     }

@@ -29,6 +29,14 @@
         ast_array_item
     } AstType;
 
+    typedef enum _Operator {
+        OP_NULL = 0,
+        OP_EQUAL, OP_LESS_EQUAL, OP_GREATER_EQUAL, OP_IS_EQUAL, OP_NOT_EQUAL,
+        OP_OR, OP_AND, OP_PLUS_EQUAL, OP_MINUS_EQUAL, OP_MUL_EQUAL, OP_DIV_EQUAL,
+        OP_PLUS, OP_MINUS, OP_MULT, OP_DIV, OP_MODULO, OP_EXP, OP_LESS, OP_GREATER,
+        OP_BANG,
+    } Operator;
+
     const char* ast_type_to_string(AstType type);
 
 #endif

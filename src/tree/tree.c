@@ -14,8 +14,9 @@ t_create_node(AstType ast_type, char* value, int lineno, T_Node* leftNode, T_Nod
   node->rightNode = rightNode;
   node->ast_type = ast_type;
   node->value = value ? strdup(value) : NULL;
+  node->operator = OP_NULL;
   node->is_constant = false;
-  node->var_type = TYP_UNKNOWN;
+  node->var_type = TYP_NULL;
   node->lineno = lineno;
   return node;
 }
