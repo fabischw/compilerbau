@@ -3,6 +3,8 @@
   #define TREE_H
   #include "../typing/typing.h"
   #include "ast_type.h"
+  #include "../tree/ast_type.h"
+  #include <stdbool.h>
  
   typedef struct _t_node
   {
@@ -12,6 +14,7 @@
   
     AstType ast_type;
     char* value;
+    Operator operator;
     bool is_constant;
     VarType var_type;
     int lineno;
