@@ -180,32 +180,6 @@ assignment_expr:
     | postfix_expr EQUAL assignment_expr              {DP(assignment_expr6); 
         $$.node = ast_node(ast_assignment, $2.content, $1.node, $3.node); 
         $$.node->operator = OP_EQUAL; }
-
-/*    | IDENTIFIER '[' expression ']' PLUS_EQUAL assignment_expr       {DP(assignment_expr7); 
-        T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
-        T_Node *array_indexing = ast_node(ast_array_indexing, NULL, identifier, $3.node);
-        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); 
-        $$.node->operator = OP_PLUS_EQUAL; }
-    | IDENTIFIER '[' expression ']' MINUS_EQUAL assignment_expr      {DP(assignment_expr8); 
-        T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
-        T_Node *array_indexing = ast_node(ast_array_indexing, NULL, identifier, $3.node);
-        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); 
-        $$.node->operator = OP_MINUS_EQUAL; }
-    | IDENTIFIER '[' expression ']' MUL_EQUAL assignment_expr        {DP(assignment_expr9); 
-        T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
-        T_Node *array_indexing = ast_node(ast_array_indexing, NULL, identifier, $3.node);
-        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); 
-        $$.node->operator = OP_MUL_EQUAL; }
-    | IDENTIFIER '[' expression ']' DIV_EQUAL assignment_expr        {DP(assignment_expr10); 
-        T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
-        T_Node *array_indexing = ast_node(ast_array_indexing, NULL, identifier, $3.node);
-        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); 
-        $$.node->operator = OP_DIV_EQUAL; }
-    | IDENTIFIER '[' expression ']' EQUAL assignment_expr              {DP(assignment_expr11); 
-        T_Node *identifier = ast_node(ast_IDENTIFIER, $1.content, NULL, NULL);
-        T_Node *array_indexing = ast_node(ast_array_indexing, NULL, identifier, $3.node);
-        $$.node = ast_node(ast_assignment, $5.content, array_indexing, $6.node); 
-        $$.node->operator = OP_EQUAL; }*/
     ;
 
 
