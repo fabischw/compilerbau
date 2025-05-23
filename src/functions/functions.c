@@ -5,7 +5,7 @@
 
 Function 
 *func_create(size_t parameter_count, VarType *parameter_types, VarType return_type) {
-    Function *func = malloc(sizeof(Function) + parameter_count + sizeof(VarType));
+    Function *func = malloc(sizeof(Function) + (parameter_count * sizeof(VarType)));
     if (!func) return NULL;
 
     func->parameter_count = parameter_count;
