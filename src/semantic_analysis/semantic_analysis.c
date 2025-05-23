@@ -96,13 +96,9 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
         case ast_STRING: ast_node->var_type = TYP_STRING; break;
         case ast_CHARACTER: ast_node->var_type = TYP_CHARACTER; break;
         
-        case ast_variable_declaration_const:
+        case ast_variable_declaration_const:    // this node does not follow default postorder traversal
             _decl_is_const = true;
-        case ast_variable_declaration:
-            // check if already exists in symbol table
-            // if not add to symbol table
-            // then do traversal
-            // then do typechecking
+        case ast_variable_declaration:          // this node does not follow default postorder traversal
             identifier = ast_node->rightNode->leftNode->value;
             dataType* symbol;
 
@@ -114,8 +110,12 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
             }
 
             if (ast_node->leftNode->ast_type == ast_array_declaration) {
-                var_type = wrap_with_array_type(ast_node->leftNode->leftNode->ast_type);
+                var_type = wrap_with_array_type(ast_node->leftNode->leftNode->var_type);
                 sem_postorder(ast_node->leftNode->rightNode, symbol_table); // check array length expression
+                if (ast_node->leftNode->rightNode->var_type != TYP_INT &&
+                    ast_node->leftNode->rightNode->var_type != TYP_CHARACTER) {
+                        sem_error("Expected integer or character as array index", ast_node);
+                }
             } else {
                 var_type = ast_node->leftNode->var_type;
             }
@@ -126,7 +126,7 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
 
         case ast_assignment:
             // TODO check if symbol is constant
-            if (leftType != rightType) {
+            if (leftType != rightType && rightType != TYP_ARRAY_EMPTY) {
                 char temp[100];
                 sprintf(temp, "Cannot assign %s to %s", vartype_to_string(rightType), vartype_to_string(leftType));
                 sem_error(temp, ast_node);
@@ -149,13 +149,13 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
             if (!is_vartype_array(leftType)) {
                 sem_error("Can only index array type", ast_node);
             }
-            if (rightType != TYP_INT || rightType != TYP_CHARACTER) {
+            if (rightType != TYP_INT && rightType != TYP_CHARACTER) {
                 sem_error("Expected integer or character as array index", ast_node);
             }
             ast_node->var_type = unwrap_array_type(ast_node->var_type);
             break;
 
-        case ast_function_call:
+        case ast_function_call:     // this node does not follow default postorder traversal
             identifier = ast_node->leftNode->value;
             if (!ll_contains_value_id(symbol_table, identifier)) {
                 char temp[100];
@@ -210,9 +210,9 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
             break;
         case ast_array:
             if (ast_node->leftNode == NULL) {
-                ast_node->ast_type = TYP_ARRAY_EMPTY;
+                ast_node->var_type = TYP_ARRAY_EMPTY;
             } else {
-                ast_node->ast_type = wrap_with_array_type(leftType);
+                ast_node->var_type = wrap_with_array_type(leftType);
             }
             break;
 
@@ -220,7 +220,7 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
             if (rightType != TYP_NULL && leftType != rightType) {
                 sem_error("Expected array items to be of same type", ast_node);
             }
-            ast_node->ast_type = leftType;
+            ast_node->var_type = leftType;
             break;
 
         case ast_loop_declaration:

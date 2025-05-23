@@ -268,6 +268,7 @@ primary_expr:
 
 arr_expr:
     '[' arr_body ']'        {DP(arr_expr1); $$.node = ast_node(ast_array, NULL, $2.node, NULL); }
+    |'['  ']'        {DP(arr_expr1); $$.node = ast_node(ast_array, NULL, NULL, NULL); }
     ;
 
 arr_body:
