@@ -119,19 +119,44 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
             } else {
                 var_type = ast_node->leftNode->var_type;
             }
+            sem_postorder(ast_node->rightNode->rightNode, symbol_table); // check right side expression
+
+            VarType exp_typ = ast_node->rightNode->rightNode->var_type;
+            if (var_type != exp_typ && !(is_vartype_array(var_type) && exp_typ == TYP_ARRAY_EMPTY)) {
+                char temp[100];
+                sprintf(temp, "Cannot assign %s to %s", vartype_to_string(exp_typ), vartype_to_string(var_type));
+                sem_error(temp, ast_node);
+            }
+
+            // add to symbol table
             symbol = ll_create_dataType(identifier, var_type, _decl_is_const, ast_node->lineno);
             ll_add_value(symbol_table, symbol);
-            sem_postorder(ast_node->rightNode, symbol_table); // check right side expression
             break;
 
         case ast_assignment:
-            // TODO check if symbol is constant
-            if (leftType != rightType && rightType != TYP_ARRAY_EMPTY) {
+            if (leftType != rightType && !(is_vartype_array(leftType) && rightType == TYP_ARRAY_EMPTY)) {
                 char temp[100];
                 sprintf(temp, "Cannot assign %s to %s", vartype_to_string(rightType), vartype_to_string(leftType));
                 sem_error(temp, ast_node);
             }
+
             ast_node->var_type = leftType;
+            char* identifier;
+
+            if (ast_node->leftNode->ast_type == ast_IDENTIFIER) {
+                identifier = ast_node->leftNode->value;
+            }
+            else if (ast_node->leftNode->ast_type == ast_array_indexing) {
+                identifier = ast_node->leftNode->leftNode->value;
+            } else {
+                sem_error("Can only assign to IDENTIFIER or ARRAY.", ast_node);
+                break;
+            }
+
+            symbol = ll_get_by_value_id(symbol_table, identifier);
+            if (symbol->is_constant) {
+                sem_error("Cannot assign to constant value", ast_node);
+            }
             break;
 
         case ast_IDENTIFIER:
