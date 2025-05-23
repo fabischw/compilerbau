@@ -5,6 +5,7 @@
 	#include "../src/typing/typing.h"
     #include "../src/tree/tree.h"
     #include "../src/linked_list/linked_list.h"
+	#include "../src/tree/ast_type.h"
 	#include "grammar.tab.h"
 	extern int yyerror(const char* s);
 	int yylineno;	
@@ -47,15 +48,15 @@ alpha [a-zA-Z]
 "-="                        { strcpy(yylval.token_obj.content, (yytext)); return (MINUS_EQUAL); }
 "*="                        { strcpy(yylval.token_obj.content, (yytext)); return (MUL_EQUAL); }
 "/="                        { strcpy(yylval.token_obj.content, (yytext)); return (DIV_EQUAL); }
-"="                         { strcpy(yylval.token_obj.content, (yytext)); return ('='); }
-"<"                         { strcpy(yylval.token_obj.content, (yytext)); return ('<'); }
-">"                         { strcpy(yylval.token_obj.content, (yytext)); return ('>'); }
-"+"                         { strcpy(yylval.token_obj.content, (yytext)); return ('+'); }
-"-"                         { strcpy(yylval.token_obj.content, (yytext)); return ('-'); }
-"*"                         { strcpy(yylval.token_obj.content, (yytext)); return ('*'); }
-"/"                         { strcpy(yylval.token_obj.content, (yytext)); return ('/'); }
-"^"                         { strcpy(yylval.token_obj.content, (yytext)); return ('^'); }
-"%"                         { strcpy(yylval.token_obj.content, (yytext)); return ('%'); }
+"="                         { strcpy(yylval.token_obj.content, (yytext)); return (EQUAL); }
+"<"                         { strcpy(yylval.token_obj.content, (yytext)); return (LESS); }
+">"                         { strcpy(yylval.token_obj.content, (yytext)); return (GREATER); }
+"+"                         { strcpy(yylval.token_obj.content, (yytext)); return (PLUS); }
+"-"                         { strcpy(yylval.token_obj.content, (yytext)); return (MINUS); }
+"*"                         { strcpy(yylval.token_obj.content, (yytext)); return (MULT); }
+"/"                         { strcpy(yylval.token_obj.content, (yytext)); return (DIV); }
+"^"                         { strcpy(yylval.token_obj.content, (yytext)); return (EXP); }
+"%"                         { strcpy(yylval.token_obj.content, (yytext)); return (MODULO); }
 "("                         { strcpy(yylval.token_obj.content, (yytext)); return ('('); }
 ")"                         { strcpy(yylval.token_obj.content, (yytext)); return (')'); }
 "{"                         { strcpy(yylval.token_obj.content, (yytext)); return ('{'); }
@@ -63,10 +64,10 @@ alpha [a-zA-Z]
 "["                         { strcpy(yylval.token_obj.content, (yytext)); return ('['); }
 "]"                         { strcpy(yylval.token_obj.content, (yytext)); return (']'); }
 ","                         { strcpy(yylval.token_obj.content, (yytext)); return (','); }
-"!"                         { strcpy(yylval.token_obj.content, (yytext)); return ('!'); }
+"!"                         { strcpy(yylval.token_obj.content, (yytext)); return (BANG); }
 ";"                         { strcpy(yylval.token_obj.content, (yytext)); return (';'); }
 
-[\n]                        { return (NEWLINE); }
+[\r?\n]                        { return (NEWLINE); }
 #[^\n]* ;
 [ \t] ;
 . {yyerror("unknown symbol"); };

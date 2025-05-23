@@ -3,8 +3,7 @@
 
     /* Not using "TYPE_xx" because of redeclaration errors */
     typedef enum _VarType {
-        TYP_INVALID = -2,
-        TYP_UNKNOWN,
+        TYP_NULL = 0,
         TYP_INT,
         TYP_STRING,
         TYP_CHARACTER,
