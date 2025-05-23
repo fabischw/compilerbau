@@ -134,13 +134,6 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
             break;
 
         case ast_assignment:
-            if (leftType != rightType && !(is_vartype_array(leftType) && rightType == TYP_ARRAY_EMPTY)) {
-                char temp[100];
-                sprintf(temp, "Cannot assign %s to %s", vartype_to_string(rightType), vartype_to_string(leftType));
-                sem_error(temp, ast_node);
-            }
-
-            ast_node->var_type = leftType;
             char* identifier;
 
             if (ast_node->leftNode->ast_type == ast_IDENTIFIER) {
@@ -152,6 +145,16 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
                 sem_error("Can only assign to IDENTIFIER or ARRAY.", ast_node);
                 break;
             }
+
+            if (!ll_contains_value_id(symbol_table, identifier)) break;
+
+            if (leftType != rightType && !(is_vartype_array(leftType) && rightType == TYP_ARRAY_EMPTY)) {
+                char temp[100];
+                sprintf(temp, "Cannot assign %s to %s", vartype_to_string(rightType), vartype_to_string(leftType));
+                sem_error(temp, ast_node);
+            }
+
+            ast_node->var_type = leftType;
 
             symbol = ll_get_by_value_id(symbol_table, identifier);
             if (symbol->is_constant) {
@@ -177,7 +180,7 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
             if (rightType != TYP_INT && rightType != TYP_CHARACTER) {
                 sem_error("Expected integer or character as array index", ast_node);
             }
-            ast_node->var_type = unwrap_array_type(ast_node->var_type);
+            ast_node->var_type = unwrap_array_type(ast_node->leftNode->var_type);
             break;
 
         case ast_function_call:     // this node does not follow default postorder traversal
