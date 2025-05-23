@@ -16,7 +16,9 @@
         TYP_ARRAY_CHARACTER,
         TYP_ARRAY_BOOLEAN,
         TYP_ARRAY_FLOAT,
-        TYP_ARRAY_EMPTY
+        TYP_ARRAY_EMPTY,
+        TYP_FUNCTION,
+        TYP_ANY,
     } VarType;
 
     VarType wrap_with_array_type(VarType var_type);

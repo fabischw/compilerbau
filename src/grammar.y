@@ -9,6 +9,7 @@
     #include "../src/linked_list/linked_list.h"
     #include "../src/tree/ast_type.h"
     #include "../src/semantic_analysis/semantic_analysis.h"
+    #include "../src/thinklib/thinklib.h"
     
     //#define DP(s) printf("->%s\n", #s)
     #define DP(s) (1)
@@ -303,7 +304,7 @@ main(int argc, char** argv)
         printf("--- AST Created ---\n");
         t_traverse(root);
         printf("--- Begin Type Checking ---\n");
-        symbol_table = ll_create_node(ll_create_dataType("",TYP_NULL,false,-1));
+        symbol_table = create_stdlib_symbol_table();
         semantic_analysis(root, symbol_table);
         printf("--- Type Checking Done ---\n");
         ll_print_linked_list(symbol_table);

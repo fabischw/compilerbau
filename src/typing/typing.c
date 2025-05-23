@@ -27,6 +27,9 @@ vartype_to_string(VarType var_type) {
         case TYP_ARRAY_BOOLEAN: return "boolean[]";
         case TYP_ARRAY_FLOAT: return "float[]";
         case TYP_ARRAY_EMPTY: return "empty[]";
+        case TYP_ANY: return "any";
+        case TYP_FUNCTION: return "function";
+        case TYP_NULL: return "null";
         default: return "unknown";
     }
 }

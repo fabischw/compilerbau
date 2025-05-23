@@ -82,6 +82,7 @@ LL_Node* ll_get_last_node(LL_Node* linked_list) {
 void ll_free_dataType(dataType* dt) {
     dataType dt_val = *dt;
     free(dt_val.id_name);
+    if (dt_val.func) free(dt_val.func);
     free(dt);
 }
 

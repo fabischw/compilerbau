@@ -13,13 +13,13 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
 
     if (!(  // don't do postorder traversal for some node types
         ast_node->ast_type == ast_variable_declaration ||
-        ast_node->ast_type == ast_variable_declaration_const
+        ast_node->ast_type == ast_variable_declaration_const ||
+        ast_node->ast_type == ast_function_call
     )) {
         errCount += sem_postorder(ast_node->rightNode, symbol_table);
         errCount += sem_postorder(ast_node->leftNode, symbol_table);
     } 
 
-    printf("=== %s\n", ast_type_to_string(ast_node->ast_type));
     
     VarType leftType = (ast_node->leftNode) ? ast_node->leftNode->var_type : TYP_NULL;
     VarType rightType = (ast_node->rightNode) ? ast_node->rightNode->var_type : TYP_NULL;
@@ -90,7 +90,6 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
             }
             break;
             
-        case ast_datatype:
         case ast_INTEGER: ast_node->var_type = TYP_INT; break;
         case ast_FLOAT: ast_node->var_type = TYP_FLOAT; break;
         case ast_BOOLEAN: ast_node->var_type = TYP_BOOLEAN; break;
@@ -157,8 +156,52 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
             break;
 
         case ast_function_call:
+            identifier = ast_node->leftNode->value;
+            if (!ll_contains_value_id(symbol_table, identifier)) {
+                char temp[100];
+                sprintf(temp, "Symbol '%s' not defined", identifier);
+                sem_error(temp, ast_node);
+                break;
+            }
+            symbol = ll_get_by_value_id(symbol_table, identifier);
+            if (symbol->var_type != TYP_FUNCTION) {
+                char temp[100];
+                sprintf(temp, "Symbol '%s' is not a function", identifier);
+                sem_error(temp, ast_node);
+                break;
+            }
+            
+            int counter = symbol->func->parameter_count;
+            VarType* param_types = symbol->func->parameter_types;
+            T_Node* parameter = ast_node;
+
+            int given_params = 0;
+            while ((parameter = parameter->rightNode) != NULL) given_params++;
+            if (given_params!=symbol->func->parameter_count) {
+                    char temp[100];
+                    sprintf(temp, "Function expected %lu arguments, %d were given", symbol->func->parameter_count, given_params);
+                    sem_error(temp, ast_node);
+                    break;
+            }
+
+            param_types = param_types+counter-1;
+            parameter = ast_node;
+            while ((parameter = parameter->rightNode) != NULL) {
+                sem_postorder(parameter->leftNode, symbol_table);
+                if ((*param_types != TYP_ANY) && parameter->leftNode->var_type != *param_types) {
+                    char temp[100];
+                    sprintf(temp, "Parameter %d has unexpected type", counter);
+                    sem_error(temp, ast_node);
+                }
+                param_types--;
+                counter--;
+            }
+
+            ast_node->var_type = symbol->func->return_type;
+            break;
+
         case ast_parameters:
-            // TODO
+            sem_error("This statement should not be encountered", ast_node);
             break;
 
 
@@ -192,10 +235,11 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
             }
             break;
         
-        case ast_statement:
         case ast_condition_if:
         case ast_condition_elif:
         case ast_condition_else:
+        case ast_datatype:
+        case ast_statement:
             break;
         default:
             sem_error("Unhandled AST Node Type detected. Help :/", ast_node);
