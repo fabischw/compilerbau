@@ -2,12 +2,14 @@
     #define LL_H
 
     #include "../typing/typing.h"
+    #include "../functions/functions.h"
 
     typedef struct _dataType {
         char* id_name;
         VarType var_type;
         bool is_constant;
         int line_no;
+        Function *func;
     } dataType;
 
     typedef struct _LL_Node {
@@ -27,5 +29,6 @@
     void ll_remove_last_node(LL_Node* linked_list);
     void ll_free_list(LL_Node* linked_list);
     void ll_print_linked_list(LL_Node* linked_list);
+    dataType* ll_get_by_value_id(LL_Node* linked_list, char* id_name);
 
 #endif
