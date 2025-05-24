@@ -1,0 +1,39 @@
+# This is an example think program providing statements that should not pass type checking
+
+int my_int;
+float my_float;
+char my_char;
+bool my_bool;
+string my_string;
+
+
+my_int = 7;
+my_float = 2.3;
+my_char = "a";
+my_bool = False;
+my_string = "Test";
+
+
+# int with float
+my_int = my_int + my_float;
+my_int = my_int - my_float;
+my_int = my_int * my_float;
+my_int = my_int / my_float;
+
+# int with char
+my_int = "a";
+my_int = "a" * 7;
+my_int = "a" * 7;
+
+# arrays
+int[3] my_int_array = [1.0, 1, 1];  # float in int array
+
+
+
+
+
+
+
+
+
+

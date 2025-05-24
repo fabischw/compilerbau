@@ -1,0 +1,64 @@
+# This is an example think program providing statements that should pass type checking
+
+int my_int;
+float my_float;
+char my_char;
+bool my_bool;
+string my_string;
+
+
+# statements below should pass type checking
+
+
+my_int = 7;
+my_float = 2.3;
+my_char = "a";
+my_bool = False;
+my_string = "Hello";
+
+
+# int operations
+int my_int2 = 8;
+my_int += my_int2;
+my_int -= my_int2;
+my_int = my_int + 2;
+my_int = my_int2 / 2;
+my_int *= my_int2;
+
+
+# float operations
+float my_float2 = 7.2;
+my_float += my_float2;
+my_float -= my_float2;
+my_float = my_float + 2;
+my_float = my_float2 / 2;
+my_float *= my_float2;
+
+
+# string operations
+my_string[1] = "a";
+
+
+
+# logic operations
+my_bool = not my_bool;
+my_bool = my_bool or True;
+my_bool = True and False;
+my_bool = 7 < 2;
+my_bool = 7 < my_int;
+my_bool = my_float < 8.7;
+my_bool = "a" < "b";
+
+
+
+# array
+int[10] my_int_array;
+my_int_array = [0, 1,2,3,4,5,6,7,8,9];
+
+float[3] my_float_array = [1.0, 2.0, 3.0];
+
+
+
+
+
+
