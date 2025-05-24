@@ -8,6 +8,7 @@
     #include "../src/typing/typing.h"
     #include "../src/linked_list/linked_list.h"
     #include "../src/tree/ast_type.h"
+    #include "../src/constant_folding/constant_folding.h"
     
     //#define DP(s) printf("->%s\n", #s)
     #define DP(s) (1)
@@ -274,6 +275,9 @@ main(int argc, char** argv)
         yyparse();
         //semantic_analysis(root);
         fclose(yyin);
+        t_traverse(root);
+        perform_folding(root);
+        printf("\n\n\n");
         t_traverse(root);
     }
     else {
