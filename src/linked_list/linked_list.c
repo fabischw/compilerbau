@@ -12,6 +12,8 @@ dataType* ll_create_dataType(char* id_name, VarType var_type, bool is_constant, 
     dt->var_type = var_type; 
     dt->is_constant = is_constant;
     dt->line_no = line_no;
+    dt->const_value = 0;
+    dt->has_const_val = false;
     return dt;
 }
 
@@ -109,11 +111,13 @@ void ll_print_linked_list(LL_Node* linked_list) {
     // print entire linked list (used for debugging)
     LL_Node* current = linked_list;
     while (current != NULL) {
-        printf("value: (id_name: %s | var_type: %s | is_constant: %d | line: %d)\n",
+        printf("value: (id_name: %s | var_type: %s | is_constant: %d | line: %d | const_value: %f | has_const_val: %d)\n",
                 current->value->id_name,
                 vartype_to_string(current->value->var_type),
                 current->value->is_constant,
-                current->value->line_no);
+                current->value->line_no,
+                current->value->const_value,
+                current->value->has_const_val);
         current = current->next;
     }
 }

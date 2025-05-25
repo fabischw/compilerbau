@@ -8,9 +8,16 @@
     #include <math.h>
     #include "../tree/tree.h"
     #include "../tree/ast_type.h"
+    #include "../linked_list/linked_list.h"
+    #include "../typing/typing.h"
 
-    bool fold(T_Node* node);
+    bool basic_arithmetic_fold(T_Node* node);
+    void perform_folding(T_Node** root_ptr , LL_Node* symbol_table);
+    bool detect_basic_consts(T_Node* root, LL_Node* symbol_table);
+    bool update_ast(T_Node* root, LL_Node* symbol_table);
+    bool remove_const_decls(T_Node* node, LL_Node* symbol_table);
 
-    void perform_folding(T_Node* root);
+    static bool try_remove_decl_node(T_Node** child_ptr, LL_Node* symbol_table);
+    bool remove_const_decls(T_Node* node, LL_Node* symbol_table);
 
 #endif
