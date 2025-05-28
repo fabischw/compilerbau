@@ -10,6 +10,7 @@
     #include "../src/tree/ast_type.h"
     #include "../src/semantic_analysis/semantic_analysis.h"
     #include "../src/thinklib/thinklib.h"
+    #include "../src/generation/generation.h"
     
     //#define DP(s) printf("->%s\n", #s)
     #define DP(s) (1)
@@ -276,19 +277,23 @@ main(int argc, char** argv)
         yydebug = 0;
         yyin = fopen(argv[1], "r");
         yyparse();
-        printf("--- AST Created ---\n");
+        //printf("--- AST Created ---\n");
         t_traverse(root);
-        printf("--- Begin Type Checking ---\n");
+        //printf("--- Begin Type Checking ---\n");
         symbol_table = create_stdlib_symbol_table();
         semantic_analysis(root, symbol_table);
-        printf("--- Type Checking Done ---\n");
-        ll_print_linked_list(symbol_table);
+        //printf("--- Type Checking Done ---\n");
+        //ll_print_linked_list(symbol_table);
+
+        generate_assembly(root);
+        
         fclose(yyin);
     }
-    else {
+    // not usable at the moment (just for grammar checking)
+    /*else {
         printf (">>> Please type in any input:\n");
         yyparse();
-    }
+    }*/
     return 0;
 }
 

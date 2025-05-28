@@ -1,0 +1,7 @@
+define equal je
+define not_equal jne
+define is_zero jz
+define greater jg
+define greater_or_equal jge
+define lesser jl
+define lesser_or_equal jle
