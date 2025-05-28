@@ -15,9 +15,8 @@
     void perform_folding(T_Node** root_ptr , LL_Node* symbol_table);
     bool detect_basic_consts(T_Node* root, LL_Node* symbol_table);
     bool update_ast(T_Node* root, LL_Node* symbol_table);
-    bool remove_const_decls(T_Node* node, LL_Node* symbol_table);
+    bool remove_const_decls(T_Node** node, LL_Node* symbol_table);
 
     static bool try_remove_decl_node(T_Node** child_ptr, LL_Node* symbol_table);
-    bool remove_const_decls(T_Node* node, LL_Node* symbol_table);
 
 #endif

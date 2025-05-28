@@ -143,6 +143,14 @@ bool remove_const_decls(T_Node* node, LL_Node* symbol_table) {
     updated |= try_remove_decl_node(&node->leftNode, symbol_table);
     updated |= try_remove_decl_node(&node->rightNode, symbol_table);
 
+    if (node->rightNode &&
+        (node->rightNode->ast_type == ast_statement) &&
+        !node->rightNode->leftNode &&
+        !node->rightNode->rightNode) {
+            t_free_node(&node->rightNode);
+            node->rightNode = NULL;
+            updated = true;
+        }
     return updated;
 }
 
@@ -176,7 +184,6 @@ bool update_ast(T_Node* root, LL_Node* symbol_table) {
         }
     }
     return updated;
-    
 }
 
 
@@ -192,10 +199,8 @@ void perform_folding(T_Node** root_ptr , LL_Node* symbol_table) {
         changed |= update_ast(wrapper_root.rightNode, symbol_table);
         pass_count += 1;
 
-        // if (wrapper_root.rightNode) {
-        //     t_traverse(wrapper_root.rightNode);
-        // }
     }
+    *root_ptr = wrapper_root.rightNode;
     printf("Constant folding took %d passes\n", pass_count);
 }
 
