@@ -16,6 +16,7 @@
 
 digit [0-9]
 alpha [a-zA-Z]
+alphap [_a-zA-Z]
 
 %% 
 
@@ -31,7 +32,7 @@ alpha [a-zA-Z]
 "const"                     { strcpy(yylval.token_obj.content, (yytext)); return (CONSTANT); }
 
 (True|False)                { strcpy(yylval.token_obj.content, (yytext)); return (BOOLEAN); }
-{alpha}({alpha}|{digit})*   { strcpy(yylval.token_obj.content, (yytext)); return (IDENTIFIER); }
+{alphap}({alphap}|{digit})*   { strcpy(yylval.token_obj.content, (yytext)); return (IDENTIFIER); }
 
 {digit}+                    { strcpy(yylval.token_obj.content, (yytext)); return (INTEGER);  }
 {digit}*\.{digit}*          { strcpy(yylval.token_obj.content, (yytext)); return (FLOAT); }

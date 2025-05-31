@@ -4,6 +4,39 @@
 #include "../linked_list/linked_list.h"
 #include <stdio.h>
 
+/*  Error types 
+Example             Description                         
+
+int a = 5;          Redeclaration of variable
+
+arr[1] = 5;
+b = 5;              Assignment to undefined variable
+
+print(arr[3])
+print(b);           Usage of undefined variable
+
+my_const = 5;       Assignment to constant variable
+
+a = "wrong"         Assignment of incorrect type
+
+func() = 5          Invalid assignment to structure
+
+"hi" + 5            Operation on unequal types
+
+if (5) {}           
+while (5) {}        Incorrect type in condition
+
+expects_str(123)    Parameter with invalid type
+
+two_args(1)         Invalid number of parameters
+
+my_arr["hi"]        Non numeric array index
+
+6[1]                Indexing of non-array type
+
+5 && True           
+
+*/
 
 int sem_error(const char* s, T_Node* ast_node);
 
