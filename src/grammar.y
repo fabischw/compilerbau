@@ -278,14 +278,20 @@ main(int argc, char** argv)
         yydebug = 0;
         yyin = fopen(argv[1], "r");
         yyparse();
+        fclose(yyin);
+        printf("\nSyntactic analysis finshed with %d errors\n", error_count);
+        if (error_count > 0) return 1;
+
         printf("--- AST Created ---\n");
         t_traverse(root);
+
         printf("--- Begin Type Checking ---\n");
         symbol_table = create_stdlib_symbol_table();
-        semantic_analysis(root, symbol_table);
+        int type_checking_errors = semantic_analysis(root, symbol_table);
+        printf("\nSemantic analysis finished with %d errors\n", type_checking_errors);
+        if (type_checking_errors > 0) return 1;
         printf("--- Type Checking Done ---\n");
-        ll_print_linked_list(symbol_table);
-        fclose(yyin);
+
         printf("\n--- Performing constant folding optimizations ---\n");
         perform_folding(&root, symbol_table);
         printf("--- Constant folding done. ---\nOptimized AST and symbol table below:\n\n");
@@ -295,7 +301,10 @@ main(int argc, char** argv)
             printf("(AST is empty after optimization)\n");
         }
         printf("\n\n\n");
+
         ll_print_linked_list(symbol_table);
+
+        printf("\nThinking was successful.");
     }
     else {
         printf (">>> Please type in any input:\n");
