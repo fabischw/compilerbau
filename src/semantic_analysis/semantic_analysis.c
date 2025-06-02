@@ -38,19 +38,20 @@ my_arr["hi"]        Non numeric array index
 
 */
 
+int sem_error_count;
+
 int sem_error(const char* s, T_Node* ast_node);
 
 int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
     if (ast_node == NULL) return 0;
-    int errCount = 0;
 
     if (!(  // don't do postorder traversal for some node types
         ast_node->ast_type == ast_variable_declaration ||
         ast_node->ast_type == ast_variable_declaration_const ||
         ast_node->ast_type == ast_function_call
     )) {
-        errCount += sem_postorder(ast_node->rightNode, symbol_table);
-        errCount += sem_postorder(ast_node->leftNode, symbol_table);
+        sem_postorder(ast_node->rightNode, symbol_table);
+        sem_postorder(ast_node->leftNode, symbol_table);
     } 
 
     
@@ -309,13 +310,15 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
 }
 
 int semantic_analysis(T_Node* ast_root, LL_Node* symbol_table) {
+    sem_error_count = 0;
     sem_postorder(ast_root, symbol_table);
-    return 0;
+    return sem_error_count;
 }
 
 int
 sem_error(const char* s, T_Node* ast_node)
 {
+    sem_error_count++;
     fprintf(stderr, "Error in line: %d, %s\n", ast_node->lineno, s);
     return 1;
 }
