@@ -11,6 +11,7 @@
     #include "../src/semantic_analysis/semantic_analysis.h"
     #include "../src/thinklib/thinklib.h"
     #include "../src/constant_folding/constant_folding.h"
+
     
     //#define DP(s) printf("->%s\n", #s)
     #define DP(s) (1)
