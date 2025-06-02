@@ -10,6 +10,8 @@
         bool is_constant;
         int line_no;
         Function *func;
+        double const_value;
+        bool has_const_val;
     } dataType;
 
     typedef struct _LL_Node {
