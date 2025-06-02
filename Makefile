@@ -13,7 +13,7 @@ $(OUT_DIR):
 
 # GCC
 $(OUT_DIR)/think: $(OUT_DIR)/lex.yy.c $(OUT_DIR)/grammar.tab.c $(SRC_DIR)/*/*.c
-	gcc $^ -o $(OUT_DIR)/think
+	gcc $^ -o $(OUT_DIR)/think -lm
 
 # LEX
 $(OUT_DIR)/lex.yy.c: $(OUT_DIR)/grammar.tab.c $(SRC_DIR)/lexxer.l | $(OUT_DIR) 

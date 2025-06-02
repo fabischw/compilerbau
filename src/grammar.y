@@ -10,6 +10,8 @@
     #include "../src/tree/ast_type.h"
     #include "../src/semantic_analysis/semantic_analysis.h"
     #include "../src/thinklib/thinklib.h"
+    #include "../src/constant_folding/constant_folding.h"
+
     
     //#define DP(s) printf("->%s\n", #s)
     #define DP(s) (1)
@@ -284,6 +286,16 @@ main(int argc, char** argv)
         printf("--- Type Checking Done ---\n");
         ll_print_linked_list(symbol_table);
         fclose(yyin);
+        printf("\n--- Performing constant folding optimizations ---\n");
+        perform_folding(&root, symbol_table);
+        printf("--- Constant folding done. ---\nOptimized AST and symbol table below:\n\n");
+        if (root) {
+            t_traverse(root);
+        } else {
+            printf("(AST is empty after optimization)\n");
+        }
+        printf("\n\n\n");
+        ll_print_linked_list(symbol_table);
     }
     else {
         printf (">>> Please type in any input:\n");
