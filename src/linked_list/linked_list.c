@@ -37,6 +37,20 @@ ll_contains_value_id(LL_Node* linked_list, char* id_name)
     return 0;
 }
 
+dataType*
+ll_get_by_value_id(LL_Node* linked_list, char* id_name)
+{
+    if(linked_list == NULL) return NULL;
+
+    while(linked_list)
+    {        
+    if(!strcmp(linked_list->value->id_name,id_name)) return linked_list->value;
+    linked_list = linked_list->next;
+    }
+
+    return NULL;
+}
+
 LL_Node* ll_init_list(dataType* value) {
     return ll_create_node(value);
 };
@@ -68,6 +82,7 @@ LL_Node* ll_get_last_node(LL_Node* linked_list) {
 void ll_free_dataType(dataType* dt) {
     dataType dt_val = *dt;
     free(dt_val.id_name);
+    if (dt_val.func) free(dt_val.func);
     free(dt);
 }
 
