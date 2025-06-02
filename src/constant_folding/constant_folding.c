@@ -7,6 +7,7 @@
 #include "../tree/tree.h"
 #include "../linked_list/linked_list.h"
 #include "../typing/typing.h"
+#include "constant_folding.h"
 
 
 bool basic_arithmetic_fold(T_Node* node) {
