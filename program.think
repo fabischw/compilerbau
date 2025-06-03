@@ -21,4 +21,7 @@ if (a == 3) {
 	a = 3
 }
 
+print(mystring)
+print("hello")
+
 exit()

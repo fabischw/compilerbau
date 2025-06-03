@@ -1,10 +1,25 @@
-macro write fd, buffer, length
+macro print  buffer
 {
 mov eax, 4
-mov ebx, fd
+mov ebx, 1
+strlen buffer
 mov ecx, buffer
-mov edx, length
 int 0x80
+}
+
+macro strlen string
+{
+local .next_char, .done
+xor     edx, edx
+mov ecx, string
+.next_char:
+cmp     byte [ecx], 0
+je      .done
+inc     ecx
+inc     edx
+jmp     .next_char
+.done:
+dec edx
 }
 
 macro exit code

@@ -28,6 +28,7 @@ void create_var_declaration(T_Node* declaration_node);
 void assign_variable(T_Node* assign_node);
 void create_if_clause(T_Node* if_node);
 void create_function_call(T_Node* function_node);
+char* create_label();
 
 char*
 register_to_string(Register reg)
@@ -91,8 +92,26 @@ void
 create_function_call(T_Node* function_node)
 {
   char* fn_id = function_node->leftNode->value;  
-  // TODO: parse args
-  sprintf(buffer+strlen(buffer), "%s %s", fn_id, "0");
+  // TODO: parse args?
+  if(!strcmp(fn_id, "exit"))
+  {
+  sprintf(buffer+strlen(buffer), "%s %d\n", fn_id, 0);  
+  } else if(!strcmp(fn_id, "print"))
+  {
+  //TODO: check type ?!
+  T_Node* params = function_node->rightNode;
+  char* arg_buf = params->leftNode->value;
+  if(strcmp(arg_buf, "") && arg_buf[0] == '\"')
+  {
+    char* str_label = strdup(create_label());
+    sprintf(declaration_buffer+strlen(declaration_buffer), "%s: db %s, 0xA\n", str_label, arg_buf);    
+    sprintf(buffer+strlen(buffer), "%s %s\n", fn_id, str_label);    
+    free(str_label);
+  } else
+  {
+    sprintf(buffer+strlen(buffer), "%s %s\n", fn_id, arg_buf);    
+  }
+  }
 }
 
 const char*
@@ -107,7 +126,7 @@ char*
 create_label()
 {
   memset(label_buffer, ' ', 10);
-  sprintf(label_buffer, "%s%d", ".label", counter);
+  sprintf(label_buffer, "%s%d", "label", counter);
   counter++;
   return label_buffer;
 }
@@ -174,7 +193,7 @@ solve_arithmetic_expression(T_Node* arith_expr_root)
   // also check for diff types of variables e.g. float
   if(!strcmp(arith_expr_root->value, "+"))
   {
-  // TODO: hardcoded register !!!!!!!
+  // TODO: hardcoded register (ok, if not used before like loop or if?)!!!!!!!
   sprintf(buffer+strlen(buffer), "xor %s, %s\n add r8d, %s\n add r8d, %s\n", curr_reg, curr_reg, left_id, right_id);    
   } 
   else if(!strcmp(arith_expr_root->value, "-"))
@@ -252,9 +271,10 @@ create_var_declaration(T_Node* declaration_node)
     sprintf(declaration_buffer+strlen(declaration_buffer), "%s_%s: dd 0\n", type, identifier);
     sprintf(buffer+strlen(buffer), "mov  %s, %s\n", identifier, value);
   }
-  else if(!strcmp(type, "string"))
+  else if(!strcmp(type, "str"))
   {
     // is string addition allowed if not just add string like in example
+    sprintf(declaration_buffer+strlen(declaration_buffer), "%s : db %s, 0xA\n", identifier, value);
     
   }
   else if(!strcmp(type, "bool"))
