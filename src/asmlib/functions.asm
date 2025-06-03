@@ -1,17 +1,17 @@
 macro write fd, buffer, length
 {
-mov rax, 1
-mov rdi, fd
-mov rsi, buffer
-mov rdx, length
-syscall
+mov eax, 4
+mov ebx, fd
+mov ecx, buffer
+mov edx, length
+int 0x80
 }
 
 macro exit code
 {
-mov rax, 60
-mov rdi, code
-syscall
+mov eax, 1
+mov ebx, code
+int 0x80
 }
 
 macro itos int, counter, buffer

@@ -1,6 +1,9 @@
 #include "generation.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
+#define MAX_PAGE_SIZE 1000
 
 typedef enum _Register
 {
@@ -12,35 +15,42 @@ typedef enum _Register
   R13,
 } Register;
 
-int free_register;
+Register free_register;
 
+int counter = 0;
+char label_buffer[10] = {0};
 
+char buffer[MAX_PAGE_SIZE];
+char definition_buffer[MAX_PAGE_SIZE];
+char declaration_buffer[MAX_PAGE_SIZE];
 
 void create_var_declaration(T_Node* declaration_node);
 void assign_variable(T_Node* assign_node);
+void create_if_clause(T_Node* if_node);
+void create_function_call(T_Node* function_node);
 
 char*
 register_to_string(Register reg)
 {
   switch(reg)
   {
-    case R8: return "R8";
-    case R9: return "R9";
-    case R10: return "R10";
-    case R11: return "R11";
-    case R12: return "R12";
-    case R13: return "R13";
+    case R8: return "r8d";
+    case R9: return "r9d";
+    case R10: return "r10d";
+    case R11: return "r11d";
+    case R12: return "r12d";
+    case R13: return "r13d";
   }  
 }
 
 void
-generate_assembly(T_Node* root)
+generate_assembly_(T_Node* root)
 {
   switch(root->ast_type)
   {
     case ast_statement:
-      generate_assembly(root->rightNode);
-      generate_assembly(root->leftNode);
+      generate_assembly_(root->rightNode);
+      generate_assembly_(root->leftNode);
       break;
     case ast_variable_declaration:
     case ast_variable_declaration_const:
@@ -49,10 +59,93 @@ generate_assembly(T_Node* root)
     case ast_assignment:
       assign_variable(root);
       break;
+    case ast_condition_if:
+      create_if_clause(root);
+      break;
+    case ast_function_call:
+      create_function_call(root);
+      break;
     default: break;
   }
 }
 
+void
+generate_assembly(T_Node* root)
+{
+  const char* includes = "format elf64 executable\n\n\
+include \"../src/asmlib/definitions.asm\"\ninclude \
+\"../src/asmlib/functions.asm\"\ninclude \"../src/asmlib/structures.asm\"\n";
+  generate_assembly_(root);  
+
+  FILE* fp = fopen("build/main.asm", "w");
+  if(fp)
+  {
+    fprintf(fp, "%s\n%s\n%s\n%s", includes, definition_buffer, buffer, declaration_buffer);
+    fclose(fp);
+  }
+
+  //system("fasm build/main.asm");
+}
+
+void
+create_function_call(T_Node* function_node)
+{
+  char* fn_id = function_node->leftNode->value;  
+  // TODO: parse args
+  sprintf(buffer+strlen(buffer), "%s %s", fn_id, "0");
+}
+
+const char*
+parse_operator(char* operator, int negated)
+{
+  if(!strcmp(operator, "==")) return  negated ? "not_equal" : "equal";
+  //...
+  return "ERROR";
+}
+
+char*
+create_label()
+{
+  memset(label_buffer, ' ', 10);
+  sprintf(label_buffer, "%s%d", ".label", counter);
+  counter++;
+  return label_buffer;
+}
+
+void
+create_if_clause(T_Node* if_node)
+{
+  T_Node* if_content = if_node->leftNode;
+  T_Node* if_else = if_node->rightNode;
+  //if_content->leftNode logical expr
+  // TODO: check for multiple instructions in logical expr?!
+  const char* operator = parse_operator(if_content->leftNode->value, 0);
+  char* left_side = if_content->leftNode->leftNode->value;
+  char* right_side = if_content->leftNode->rightNode->value;
+  char* label_if_done = strdup(create_label());
+  char* label_if_exit = strdup(create_label());
+  sprintf(buffer+strlen(buffer), "if %s, %s, %s, %s, %s\n%s:\n",
+         left_side, operator, right_side, 
+         label_if_done, label_if_exit, label_if_done);
+  generate_assembly_(if_content->rightNode);
+  sprintf(buffer+strlen(buffer), "%s:\n", label_if_exit); 
+  if(if_else != NULL && if_else->ast_type == ast_condition_else)
+  {
+    char* label_else_done = strdup(create_label());
+    char* label_else_exit = strdup(create_label());
+    const char* else_operator = parse_operator(if_content->leftNode->value, 1);
+    sprintf(buffer+strlen(buffer), "if %s, %s, %s, %s, %s\n%s:\n",
+           left_side, else_operator, right_side,
+         label_else_done, label_else_exit, label_else_done);
+    generate_assembly_(if_else->leftNode);
+    sprintf(buffer+strlen(buffer), "%s:\n", label_else_exit);
+
+    free(label_else_done);
+    free(label_else_exit);
+  } 
+  free(label_if_done);
+  free(label_if_exit);
+}
 char*
 solve_arithmetic_expression(T_Node* arith_expr_root)
 {
@@ -81,7 +174,8 @@ solve_arithmetic_expression(T_Node* arith_expr_root)
   // also check for diff types of variables e.g. float
   if(!strcmp(arith_expr_root->value, "+"))
   {
-  printf("xor %s, %s\n add r8, %s\n add r8, %s\n", curr_reg, curr_reg, left_id, right_id);    
+  // TODO: hardcoded register !!!!!!!
+  sprintf(buffer+strlen(buffer), "xor %s, %s\n add r8d, %s\n add r8d, %s\n", curr_reg, curr_reg, left_id, right_id);    
   } 
   else if(!strcmp(arith_expr_root->value, "-"))
   {
@@ -117,7 +211,7 @@ assign_variable(T_Node* assign_node)
       default: break;
     }
   }
-  printf("mov %s, %s\n", identifier, value);
+  sprintf(buffer+strlen(buffer), "mov %s, %s\n", identifier, value);
 }
 
 void
@@ -142,17 +236,32 @@ create_var_declaration(T_Node* declaration_node)
   }
   // TODO: idk what to do with is_const
   // TODO: assignment type changes with value type
-  if(!strcmp(type, "int") || !strcmp(type, "float") || !strcmp(type, "bool"))
+  if(!strcmp(type, "int") || !strcmp(type, "float"))
   {
-  printf("%s equ dword [%s_%s]\n%s_%s: dd 0\nmov %s, %s\n", identifier, type, identifier, type, identifier, identifier, value);
+  //sprintf(buffer+strlen(buffer), "%s equ dword [%s_%s]\n%s_%s: dd 0\nmov %s, %s\n",
+  // identifier, type, identifier, type, identifier, identifier, value);
+  sprintf(definition_buffer+strlen(definition_buffer), "%s equ dword [%s_%s]\n", identifier, type, identifier);
+  sprintf(declaration_buffer+strlen(declaration_buffer), "%s_%s: dd 0\n", type, identifier);
+  sprintf(buffer+strlen(buffer), "mov  %s, %s\n", identifier, value);
   }
   else if(!strcmp(type, "char"))
-  {printf("%s equ dword [%s_%s]\n%s_%s: db 0\nmov %s, %s\n", identifier, type, identifier, type, identifier, identifier, value);
-    
+  {
+    // TODO: elif not needed!
+    //sprintf(buffer+strlen(buffer), "%s equ dword [%s_%s]\n%s_%s: dd 0\nmov %s, %s\n", identifier, type, identifier, type, identifier, identifier, value);
+    sprintf(definition_buffer+strlen(definition_buffer), "%s equ dword [%s_%s]\n", identifier, type, identifier);
+    sprintf(declaration_buffer+strlen(declaration_buffer), "%s_%s: dd 0\n", type, identifier);
+    sprintf(buffer+strlen(buffer), "mov  %s, %s\n", identifier, value);
   }
   else if(!strcmp(type, "string"))
   {
     // is string addition allowed if not just add string like in example
     
+  }
+  else if(!strcmp(type, "bool"))
+  {
+    //sprintf(buffer+strlen(buffer), "%s equ dword [%s_%s]\n%s_%s: dd 0\nmov %s, %s\n", identifier, type, identifier, type, identifier, identifier, !strcmp(value, "True") ? "1" : "0");  
+    sprintf(definition_buffer+strlen(definition_buffer), "%s equ dword [%s_%s]\n", identifier, type, identifier);
+    sprintf(declaration_buffer+strlen(declaration_buffer), "%s_%s: dd 0\n", type, identifier);
+    sprintf(buffer+strlen(buffer), "mov  %s, %s\n", identifier, !strcmp(value, "True") ? "1" : "0");
   }
 }

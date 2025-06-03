@@ -10,14 +10,15 @@ char letter = 'k'
 a = 4 + 3;
 
 
-int add = 5 + (4 + a)
+int eadd = 5 + (4 + a)
 
-
+# keine variable darf asm keyword entsprechen !! fix mit var prefix in asm
 
 
 if (a == 3) {
 	a = a + 7
 } else {
-	a = a + 1
+	a = 3
 }
 
+exit()

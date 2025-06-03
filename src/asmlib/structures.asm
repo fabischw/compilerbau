@@ -13,7 +13,7 @@ local .exit, .loop
 .loop:
 mov eax, var1
 mov ebx, var2
-cmp eax, ebx
+cmp eax, eax
 comparator .exit
 call body
 jmp .loop
