@@ -28,6 +28,7 @@ void create_var_declaration(T_Node* declaration_node);
 void assign_variable(T_Node* assign_node);
 void create_if_clause(T_Node* if_node);
 void create_function_call(T_Node* function_node);
+void create_loop(T_Node* loop_node);
 char* create_label();
 
 char*
@@ -65,6 +66,9 @@ generate_assembly_(T_Node* root)
       break;
     case ast_function_call:
       create_function_call(root);
+      break;
+    case ast_loop_declaration:
+      create_loop(root);
       break;
     default: break;
   }
@@ -118,8 +122,26 @@ const char*
 parse_operator(char* operator, int negated)
 {
   if(!strcmp(operator, "==")) return  negated ? "not_equal" : "equal";
+  if(!strcmp(operator, "!=")) return  negated ? "equal" : "not_equal";
   //...
+  if(!strcmp(operator, "<")) return  negated ? "greater_or_equal":  "lesser";
   return "ERROR";
+}
+
+void create_loop(T_Node* loop_node)
+{
+  T_Node* cmp_expr = loop_node->leftNode;
+  char* body_label = strdup(create_label());
+  char* exit_label = strdup(create_label());
+  char* left_id = cmp_expr->leftNode->value;
+  const char* cmp = parse_operator(cmp_expr->value, 1);
+  char* right_id = cmp_expr->rightNode->value;
+  
+  sprintf(buffer+strlen(buffer), "while %s, %s, %s, %s\njmp %s\n%s:\n", left_id, cmp, right_id, body_label, exit_label, body_label);
+  generate_assembly_(loop_node->rightNode);
+  sprintf(buffer+strlen(buffer), "ret\n%s:\n", exit_label);
+  free(exit_label);
+  free(body_label);
 }
 
 char*

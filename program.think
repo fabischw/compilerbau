@@ -9,8 +9,12 @@ char letter = 'k'
 
 int esub = a - 4
 
-a = 4 + 3;
+a = 4 + 3 - 7;
 
+if(a == 0)
+{
+	print("help")
+}
 
 int eadd = 5 + (4 + a)
 
@@ -23,7 +27,13 @@ if (a == 3) {
 	a = 3
 }
 
-print(mystring)
-print("hello")
+#print("hello")
+
+a = 6
+while(a != 10)
+{
+	print(mystring);
+	a = a + 1;
+}
 
 exit()
