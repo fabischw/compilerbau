@@ -78,18 +78,15 @@ program:
 
 body:
                                             {DP(body1); $$.node = NULL; }
-    | statement_seperator_optional statement statement_seperator_optional                       {DP(body2); $$.node = $2.node; }
-    | statement_seperator_optional statement_list statement statement_seperator_optional    {DP(body3); $$.node = ast_node(ast_statement, NULL, $3.node, $2.node); }
+    | statement_seperator                   {DP(body2); $$.node = NULL; }
+    | statement_seperator_optional statement statement_seperator_optional                       {DP(body3); $$.node = $2.node; }
+    | statement_seperator_optional statement_list statement statement_seperator_optional    {DP(body4); $$.node = ast_node(ast_statement, NULL, $3.node, $2.node); }
     ;
-
-// | body statement_seperator statement            {DP(body4); $$.node =  }
 
 statement_list:
     statement_list statement statement_seperator    {DP(statement_list1); $$.node = ast_node(ast_statement, NULL, $2.node, $1.node); }
     | statement statement_seperator                 {DP(statement_list2); $$.node = $1.node; }
     ;
-
-// note: body can be empty
 
 statement_seperator:
     NEWLINE
@@ -126,10 +123,12 @@ condition_elif:
     | CONDITION_ELIF '(' expression ')' optional_newline '{' body '}' condition_elif        {DP(condition_elif3); 
         T_Node *branch = ast_node(ast_condition_content, NULL, $3.node, $7.node);
          $$.node = ast_node(ast_condition_elif, NULL, branch, $9.node); }
+    | CONDITION_ELIF '(' expression ')' optional_newline '{' body '}'        {DP(condition_elif3); 
+        T_Node *branch = ast_node(ast_condition_content, NULL, $3.node, $7.node);
+         $$.node = ast_node(ast_condition_elif, NULL, branch, NULL); }
 
 condition_else:
-                                                          {DP(condition_else0); $$.node = NULL; }
-    | CONDITION_ELSE optional_newline '{' body '}'        {DP(condition_else1); $$.node = ast_node(ast_condition_else, NULL, $4.node, NULL); }
+    CONDITION_ELSE optional_newline '{' body '}'        {DP(condition_else1); $$.node = ast_node(ast_condition_else, NULL, $4.node, NULL); }
     ;
 
 variable_declaration:
