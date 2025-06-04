@@ -4,6 +4,9 @@ SRC_DIR := src
 ifeq ($(VERBOSE),1)
   BISONFLAGS = -v
 endif
+ifeq ($(DEBUG),1)
+  FLEXFLAGS = -d
+endif
 
 all: $(OUT_DIR)/think
 
@@ -17,7 +20,7 @@ $(OUT_DIR)/think: $(OUT_DIR)/lex.yy.c $(OUT_DIR)/grammar.tab.c $(SRC_DIR)/*/*.c
 
 # LEX
 $(OUT_DIR)/lex.yy.c: $(OUT_DIR)/grammar.tab.c $(SRC_DIR)/lexxer.l | $(OUT_DIR) 
-	flex -o $(OUT_DIR)/lex.yy.c $(SRC_DIR)/lexxer.l
+	flex $(FLEXFLAGS) -o $(OUT_DIR)/lex.yy.c $(SRC_DIR)/lexxer.l
 
 # BISON
 $(OUT_DIR)/grammar.tab.c: $(SRC_DIR)/grammar.y | $(OUT_DIR)
