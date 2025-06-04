@@ -7,6 +7,8 @@ str mystring = "hello world"
 
 char letter = 'k'
 
+int esub = a - 4
+
 a = 4 + 3;
 
 

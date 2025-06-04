@@ -194,11 +194,12 @@ solve_arithmetic_expression(T_Node* arith_expr_root)
   if(!strcmp(arith_expr_root->value, "+"))
   {
   // TODO: hardcoded register (ok, if not used before like loop or if?)!!!!!!!
-  sprintf(buffer+strlen(buffer), "xor %s, %s\n add r8d, %s\n add r8d, %s\n", curr_reg, curr_reg, left_id, right_id);    
+    sprintf(buffer+strlen(buffer), "xor %s, %s\n add r8d, %s\n add r8d, %s\n", curr_reg, curr_reg, left_id, right_id);    
   } 
   else if(!strcmp(arith_expr_root->value, "-"))
   {
     
+    sprintf(buffer+strlen(buffer), "xor %s, %s\n mov r8d, %s\n sub r8d, %s\n", curr_reg, curr_reg, left_id, right_id);    
   }
   else if(!strcmp(arith_expr_root->value, "*"))
   {
@@ -266,20 +267,17 @@ create_var_declaration(T_Node* declaration_node)
   else if(!strcmp(type, "char"))
   {
     // TODO: elif not needed!
-    //sprintf(buffer+strlen(buffer), "%s equ dword [%s_%s]\n%s_%s: dd 0\nmov %s, %s\n", identifier, type, identifier, type, identifier, identifier, value);
     sprintf(definition_buffer+strlen(definition_buffer), "%s equ dword [%s_%s]\n", identifier, type, identifier);
     sprintf(declaration_buffer+strlen(declaration_buffer), "%s_%s: dd 0\n", type, identifier);
     sprintf(buffer+strlen(buffer), "mov  %s, %s\n", identifier, value);
   }
   else if(!strcmp(type, "str"))
   {
-    // is string addition allowed if not just add string like in example
     sprintf(declaration_buffer+strlen(declaration_buffer), "%s : db %s, 0xA\n", identifier, value);
     
   }
   else if(!strcmp(type, "bool"))
   {
-    //sprintf(buffer+strlen(buffer), "%s equ dword [%s_%s]\n%s_%s: dd 0\nmov %s, %s\n", identifier, type, identifier, type, identifier, identifier, !strcmp(value, "True") ? "1" : "0");  
     sprintf(definition_buffer+strlen(definition_buffer), "%s equ dword [%s_%s]\n", identifier, type, identifier);
     sprintf(declaration_buffer+strlen(declaration_buffer), "%s_%s: dd 0\n", type, identifier);
     sprintf(buffer+strlen(buffer), "mov  %s, %s\n", identifier, !strcmp(value, "True") ? "1" : "0");
