@@ -66,9 +66,11 @@ alphap [_a-zA-Z]
 "]"                         { strcpy(yylval.token_obj.content, (yytext)); return (']'); }
 ","                         { strcpy(yylval.token_obj.content, (yytext)); return (','); }
 "!"                         { strcpy(yylval.token_obj.content, (yytext)); return (BANG); }
-";"                         { strcpy(yylval.token_obj.content, (yytext)); return (';'); }
 
-[\r?\n]                        { return (NEWLINE); }
+
+
+[\r\n;\t ]+						{ return (SEPERATOR); }
+
 #[^\n]* ;
 [ \t] ;
 . {yyerror("unknown symbol"); };
