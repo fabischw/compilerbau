@@ -109,26 +109,29 @@ statement:
     ;
 
 loop_declaration:
-    WHILE '(' expression ')' optional_newline '{' body '}'      {DP(loop_declaration1); $$.node = ast_node(ast_loop_declaration, NULL, $3.node, $7.node); }
+    WHILE '(' expression ')' optional_newlines '{' body '}'      {DP(loop_declaration1); $$.node = ast_node(ast_loop_declaration, NULL, $3.node, $7.node); }
 
 condition_if:
-    CONDITION_IF '(' expression ')' optional_newline '{' body '}' condition_elif        {DP(condition_if1); 
+    CONDITION_IF '(' expression ')' optional_newlines '{' body '}' optional_newlines condition_elif        {DP(condition_if1); 
         T_Node *branch = ast_node(ast_condition_content, NULL, $3.node, $7.node); 
-        $$.node = ast_node(ast_condition_if, NULL, branch, $9.node); }
+        $$.node = ast_node(ast_condition_if, NULL, branch, $10.node); }
+    | CONDITION_IF '(' expression ')' optional_newlines '{' body '}' optional_newlines                    {DP(condition_if1); 
+        T_Node *branch = ast_node(ast_condition_content, NULL, $3.node, $7.node); 
+        $$.node = ast_node(ast_condition_if, NULL, branch, NULL); }
     ;
 
 condition_elif:
     condition_else        {DP(condition_elif1); $$.node = $1.node; }
-    | NEWLINE condition_elif        {DP(condition_elif2); $$.node = $2.node; }
-    | CONDITION_ELIF '(' expression ')' optional_newline '{' body '}' condition_elif        {DP(condition_elif3); 
+    | CONDITION_ELIF '(' expression ')' optional_newlines '{' body '}' optional_newlines condition_elif        {DP(condition_elif3); 
         T_Node *branch = ast_node(ast_condition_content, NULL, $3.node, $7.node);
-         $$.node = ast_node(ast_condition_elif, NULL, branch, $9.node); }
-    | CONDITION_ELIF '(' expression ')' optional_newline '{' body '}'        {DP(condition_elif3); 
+         $$.node = ast_node(ast_condition_elif, NULL, branch, $10.node); }
+    | CONDITION_ELIF '(' expression ')' optional_newlines '{' body '}' optional_newlines        {DP(condition_elif3); 
         T_Node *branch = ast_node(ast_condition_content, NULL, $3.node, $7.node);
          $$.node = ast_node(ast_condition_elif, NULL, branch, NULL); }
+    ;
 
 condition_else:
-    CONDITION_ELSE optional_newline '{' body '}'        {DP(condition_else1); $$.node = ast_node(ast_condition_else, NULL, $4.node, NULL); }
+    CONDITION_ELSE optional_newlines '{' body '}'        {DP(condition_else1); $$.node = ast_node(ast_condition_else, NULL, $4.node, NULL); }
     ;
 
 variable_declaration:
@@ -258,8 +261,12 @@ datatype:
     | TYPE_CHAR     {DP(datatype5); $$.node = ast_node(ast_datatype, $1.content, NULL, NULL); $$.node->var_type = TYP_CHARACTER; }
     ;
 
-optional_newline:
-    | NEWLINE optional_newline
+newlines:
+    NEWLINE
+    | newlines NEWLINE
+
+optional_newlines:
+    | newlines
     ;
     
 %%
@@ -274,7 +281,7 @@ main(int argc, char** argv)
     if(argc == 2)
     {
         extern int yydebug;
-        yydebug = 0;
+        yydebug = 1;
         yyin = fopen(argv[1], "r");
         yyparse();
         fclose(yyin);
