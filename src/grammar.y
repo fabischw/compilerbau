@@ -78,7 +78,7 @@ program:
 
 body:
                                             {DP(body1); $$.node = NULL; }
-    | SEPERATOR                   {DP(body2); $$.node = NULL; }
+    | seperator                   {DP(body2); $$.node = NULL; }
     | optional_seperator statement optional_seperator                       {DP(body3); $$.node = $2.node; }
     | optional_seperator statement_list statement optional_seperator    {DP(body4); $$.node = ast_node(ast_statement, NULL, $3.node, $2.node); }
     | optional_seperator condition_if                        {DP(body3); $$.node = $2.node; }
@@ -86,14 +86,18 @@ body:
     ;
 
 statement_list:
-    statement_list statement SEPERATOR    {DP(statement_list1); $$.node = ast_node(ast_statement, NULL, $2.node, $1.node); }
-    | statement SEPERATOR                {DP(statement_list2); $$.node = $1.node; }
+    statement_list statement seperator    {DP(statement_list1); $$.node = ast_node(ast_statement, NULL, $2.node, $1.node); }
+    | statement seperator                {DP(statement_list2); $$.node = $1.node; }
     | statement_list condition_if    {DP(statement_list1); $$.node = ast_node(ast_statement, NULL, $2.node, $1.node); }
     | condition_if                {DP(statement_list2); $$.node = $1.node; }
     ;
 
+seperator:
+    SEPERATOR | seperator SEPERATOR
+    ;
+
 optional_seperator:
-    | SEPERATOR
+    | seperator
     ;
 
 // -- statements --
@@ -121,7 +125,7 @@ condition_elif:
     | CONDITION_ELIF '(' expression ')' optional_seperator '{' body '}' optional_seperator condition_elif        {DP(condition_elif3); 
         T_Node *branch = ast_node(ast_condition_content, NULL, $3.node, $7.node);
          $$.node = ast_node(ast_condition_elif, NULL, branch, $10.node); }
-    | CONDITION_ELIF '(' expression ')' optional_seperator'{' body '}' optional_seperator       {DP(condition_elif3); 
+    | CONDITION_ELIF '(' expression ')' optional_seperator '{' body '}' optional_seperator       {DP(condition_elif3); 
         T_Node *branch = ast_node(ast_condition_content, NULL, $3.node, $7.node);
          $$.node = ast_node(ast_condition_elif, NULL, branch, NULL); }
     ;

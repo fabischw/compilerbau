@@ -259,20 +259,21 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
 
         case ast_array_item:
             if (rightType != TYP_NULL && leftType != rightType) {
-                sem_error(ast_node, "Array items of unequal type %s and %s", leftType, rightType);
+                sem_error(ast_node, "Array items of unequal type %s and %s", 
+                    vartype_to_string(leftType), vartype_to_string(rightType));
             }
             ast_node->var_type = leftType;
             break;
 
         case ast_loop_declaration:
             if (leftType != TYP_BOOLEAN) {
-                sem_error(ast_node, "Loop condition of type %s", leftType);
+                sem_error(ast_node, "Loop condition of type %s", vartype_to_string(leftType));
             }
             break;
 
         case ast_condition_content:
             if (leftType != TYP_BOOLEAN) {
-                sem_error(ast_node, "If condition of type %s", leftType);
+                sem_error(ast_node, "If condition of type %s", vartype_to_string(leftType));
             }
             break;
         
