@@ -184,7 +184,7 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
 
         case ast_array_indexing:
             if (!is_vartype_array(leftType)) {
-                sem_error(ast_node, "Indexing of %s int", vartype_to_string(leftType));
+                sem_error(ast_node, "Indexing of %s type", vartype_to_string(leftType));
             }
             if (rightType != TYP_INT && rightType != TYP_CHARACTER) {
                 sem_error(ast_node, "Non numeric array index of type %s",
