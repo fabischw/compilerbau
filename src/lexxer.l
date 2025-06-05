@@ -22,8 +22,7 @@ alphap [_a-zA-Z]
 
 #[^\n]* ;
 
-
-\"[^\"\\n]*\"               { strcpy(yylval.token_obj.content, (yytext)); return (STRING); }
+\"([^\"\\\n]|\\.)*\"        { strcpy(yylval.token_obj.content, (yytext)); return (STRING); }
 \'.?\'                      { strcpy(yylval.token_obj.content, (yytext)); return (CHARACTER); }
 
 {digit}+                    { strcpy(yylval.token_obj.content, (yytext)); return (INTEGER);  }
