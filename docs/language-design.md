@@ -4,6 +4,9 @@ file extension: ".think"
 
 
 # Code Example
+
+**! OUTDATED !**
+
 ```
 
 
