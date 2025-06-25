@@ -1,0 +1,14 @@
+int max = 1000
+
+int c = 0
+int d = 1
+
+while (c < max) {
+    print(tostr(c)); print("\n")
+    int temp = c
+    c = d
+    d = temp + d
+}
+
+print("GRRR")
+exit()

@@ -71,3 +71,5 @@ const float kc = 2.5
 const float kf = 3.1415
 
 const float kfc = (kc * 2.0) ^ kf
+
+print(tostr(kfc))
