@@ -27,5 +27,6 @@
   void t_free_node(T_Node** node);
   void t_traverse_(T_Node* root, int depth);
   void t_traverse(T_Node* root);
+  int t_is_node_empty(T_Node* node);
 
 #endif
