@@ -10,6 +10,7 @@
     #include "../src/tree/ast_type.h"
     #include "../src/semantic_analysis/semantic_analysis.h"
     #include "../src/thinklib/thinklib.h"
+    #include "../src/generation/generation.h"
     #include "../src/constant_folding/constant_folding.h"
 
     
@@ -276,6 +277,11 @@ main(int argc, char** argv)
         extern int yydebug;
         yydebug = 0;
         yyin = fopen(argv[1], "r");
+        if (!yyin) { // check if file exists
+            fprintf(stderr, "Error: Could not open file '%s'\n", argv[1]);
+            return 1;
+        }
+        
         yyparse();
         fclose(yyin);
         printf("\nSyntactic analysis finshed with %d errors\n", error_count);
@@ -303,11 +309,10 @@ main(int argc, char** argv)
 
         ll_print_linked_list(symbol_table);
 
+        printf("\n--- Performing code generation ---\n");
+        generate_assembly(root);
+
         printf("\nThinking was successful.");
-    }
-    else {
-        printf (">>> Please type in any input:\n");
-        yyparse();
     }
     return 0;
 }
