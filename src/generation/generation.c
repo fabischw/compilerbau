@@ -86,7 +86,7 @@ include \"../src/asmlib/definitions.asm\"\ninclude \
   FILE* fp = fopen("build/main.asm", "w");
   if(fp)
   {
-    fprintf(fp, "%s\n%s\n%sexit 0\n\n%s", includes, definition_buffer, buffer, declaration_buffer);
+    fprintf(fp, "%s\n%s\n%sexit 0\n\n%s%s", includes, definition_buffer, buffer, declaration_buffer, "\nconversion_buffer: times 11 db 0");
     fclose(fp);
   }
 
@@ -106,7 +106,12 @@ create_function_call(T_Node* function_node)
   //TODO: check type ?!
   T_Node* params = function_node->rightNode;
   char* arg_buf = params->leftNode->value;
-  if(strcmp(arg_buf, "") && arg_buf[0] == '\"')
+  if(!t_is_node_empty(params->leftNode))
+  {
+    create_function_call(params->leftNode);
+    arg_buf = "conversion_buffer";
+  }
+  if(arg_buf != NULL && strcmp(arg_buf, "") && arg_buf[0] == '\"')
   {
     char* str_label = strdup(create_label());
     sprintf(declaration_buffer+strlen(declaration_buffer), "%s: db %s, 0xA, 0x0\n", str_label, arg_buf);    
@@ -116,6 +121,11 @@ create_function_call(T_Node* function_node)
   {
     sprintf(buffer+strlen(buffer), "%s %s\n", fn_id, arg_buf);    
   }
+  } else if(!strcmp(fn_id, "tostr"))
+  {
+    T_Node* params = function_node->rightNode;
+    sprintf(buffer+strlen(buffer), "%s %s\n", fn_id, params->leftNode->value);  
+    
   }
 }
 
@@ -161,7 +171,6 @@ create_if_clause(T_Node* if_node)
 {
   T_Node* if_content = if_node->leftNode;
   T_Node* if_else = if_node->rightNode;
-  // // TODO: change if to just check if expr == 1 and
   // TODO: add <>= in logicalexpr
 
   //const char* operator = parse_operator(if_content->leftNode->value, 0);
@@ -208,7 +217,6 @@ char*
 solve_logical_expression(T_Node* logical_expr_root)
 {
   //TODO: add operator with negation
-    //TODO: füge oben single True/False support hinzu
     // !!!
   // see parse_operator
   char* left_id;
@@ -327,7 +335,8 @@ solve_arithmetic_expression(T_Node* arith_expr_root)
   }
   else if(!strcmp(arith_expr_root->value, "*"))
   {
-    
+    //
+    // 
   }
   else if(!strcmp(arith_expr_root->value, "/"))
   {
@@ -382,15 +391,17 @@ create_var_declaration(T_Node* declaration_node)
       default: break;
     }
   }
-  // TODO: idk what to do with is_const
-  // TODO: assignment type changes with value type
-  if(!strcmp(type, "int") || !strcmp(type, "float"))
+  if(!strcmp(type, "int"))
   {
-  //sprintf(buffer+strlen(buffer), "%s equ dword [%s_%s]\n%s_%s: dd 0\nmov %s, %s\n",
-  // identifier, type, identifier, type, identifier, identifier, value);
   sprintf(definition_buffer+strlen(definition_buffer), "%s equ dword [%s_%s]\n", identifier, type, identifier);
   sprintf(declaration_buffer+strlen(declaration_buffer), "%s_%s: dd 0\n", type, identifier);
   sprintf(buffer+strlen(buffer), "mov  %s, %s\n", identifier, value);
+  }
+  if(!strcmp(type, "float"))
+  { 
+    sprintf(definition_buffer+strlen(definition_buffer), "%s equ dword [%s_%s]\n", identifier, type, identifier);
+    sprintf(declaration_buffer+strlen(declaration_buffer), "%s_%s: dd 0\n", type, identifier);
+    sprintf(buffer+strlen(buffer), "mov  %s, %f\n", identifier, strtof(value, NULL));
   }
   if(!strcmp(type, "char"))
   {
