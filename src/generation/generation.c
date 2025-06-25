@@ -85,7 +85,7 @@ include \"../src/asmlib/definitions.asm\"\ninclude \
   FILE* fp = fopen("build/main.asm", "w");
   if(fp)
   {
-    fprintf(fp, "%s\n%s\n%s\n%s", includes, definition_buffer, buffer, declaration_buffer);
+    fprintf(fp, "%s\n%s\n%sexit 0\n\n%s", includes, definition_buffer, buffer, declaration_buffer);
     fclose(fp);
   }
 
@@ -123,8 +123,9 @@ parse_operator(char* operator, int negated)
 {
   if(!strcmp(operator, "==")) return  negated ? "not_equal" : "equal";
   if(!strcmp(operator, "!=")) return  negated ? "equal" : "not_equal";
-  //...
+  //TODO: add comparison operators
   if(!strcmp(operator, "<")) return  negated ? "greater_or_equal":  "lesser";
+  if(!strcmp(operator, ">")) return  negated ? "lesser_or_equal":  "greater";
   return "ERROR";
 }
 
@@ -160,6 +161,8 @@ create_if_clause(T_Node* if_node)
   T_Node* if_else = if_node->rightNode;
   //if_content->leftNode logical expr
   // TODO: check for multiple instructions in logical expr?!
+  // // TODO: change if to just check if expr == 1 and
+  // TODO: add <>= in logicalexpr
   const char* operator = parse_operator(if_content->leftNode->value, 0);
   char* left_side = if_content->leftNode->leftNode->value;
   char* right_side = if_content->leftNode->rightNode->value;
@@ -187,6 +190,68 @@ create_if_clause(T_Node* if_node)
   free(label_if_done);
   free(label_if_exit);
 }
+
+char*
+solve_logical_expression(T_Node* logical_expr_root)
+{
+  char* left_id;
+  char* right_id;
+  char* curr_reg = register_to_string(free_register);
+  if(t_is_node_empty(logical_expr_root->leftNode))
+  {
+    left_id = logical_expr_root->leftNode->value;
+    if(!strcmp(left_id, "True")) left_id = "1";
+    if(!strcmp(left_id, "False")) left_id = "0";
+  } else
+  {
+    free_register++;
+    left_id = solve_logical_expression(logical_expr_root->leftNode);
+    //free_register--;
+  }
+  if(t_is_node_empty(logical_expr_root->rightNode))
+  {
+    right_id = logical_expr_root->rightNode->value;
+    if(!strcmp(right_id, "True")) right_id =  "1";
+    if(!strcmp(right_id, "False")) right_id = "0";
+  } else
+  {
+    free_register++;
+    right_id = solve_logical_expression(logical_expr_root->rightNode); 
+    free_register--;
+  }
+  char* comparator = logical_expr_root->value;
+  if(!strcmp(comparator, "||"))
+  {
+    sprintf(buffer+strlen(buffer), "mov %s, %s\nor %s, %s\n", curr_reg, left_id, curr_reg, right_id);
+  }
+  if(!strcmp(comparator, "&&"))
+  {
+    sprintf(buffer+strlen(buffer), "mov %s, %s\nand %s, %s\n", curr_reg, left_id, curr_reg, right_id);
+    //sprintf(buffer+strlen(buffer), "curr_reg: %s, left_id: %s, right_id: %s\n", curr_reg, left_id, right_id);
+
+  }
+  if(!strcmp(comparator, ">"))
+  {
+    char* true_label = strdup(create_label());
+    char* exit_label = strdup(create_label());
+    sprintf(buffer+strlen(buffer),
+"mov eax, %s\nmov ebx, %s\ncmp eax, ebx\njg %s\nmov %s, 0\njmp %s\n%s:\nmov %s, 1\n%s:\n",
+left_id, right_id, true_label, curr_reg, exit_label, true_label, curr_reg, exit_label);
+    // left_id < right_id ; saved in curr_reg
+    // cmp left_id  right_id
+    // jg .label
+    // mov reg, 0
+    // jmp .label2
+    // .label:
+    // mov reg, 1
+    // label2:
+  }
+  if(!t_is_node_empty(logical_expr_root->leftNode)) free_register--;
+  //if(!t_is_node_empty(logical_expr_root->rightNode)) free_register--;
+  
+  return curr_reg;
+}
+
 char*
 solve_arithmetic_expression(T_Node* arith_expr_root)
 {
@@ -215,13 +280,12 @@ solve_arithmetic_expression(T_Node* arith_expr_root)
   // also check for diff types of variables e.g. float
   if(!strcmp(arith_expr_root->value, "+"))
   {
-  // TODO: hardcoded register (ok, if not used before like loop or if?)!!!!!!!
-    sprintf(buffer+strlen(buffer), "xor %s, %s\n add r8d, %s\n add r8d, %s\n", curr_reg, curr_reg, left_id, right_id);    
+    sprintf(buffer+strlen(buffer), "xor %s, %s\n add %s, %s\n add %s, %s\n", curr_reg, curr_reg, curr_reg, left_id, curr_reg, right_id);    
   } 
   else if(!strcmp(arith_expr_root->value, "-"))
   {
     
-    sprintf(buffer+strlen(buffer), "xor %s, %s\n mov r8d, %s\n sub r8d, %s\n", curr_reg, curr_reg, left_id, right_id);    
+    sprintf(buffer+strlen(buffer), "xor %s, %s\n mov %s, %s\n sub %s, %s\n", curr_reg, curr_reg, curr_reg, left_id, curr_reg, right_id);    
   }
   else if(!strcmp(arith_expr_root->value, "*"))
   {
@@ -250,6 +314,8 @@ assign_variable(T_Node* assign_node)
       case ast_arithmetic_expression:
         value = solve_arithmetic_expression(assign_node->rightNode);
         break;
+      case ast_logical_expression:
+        value = solve_logical_expression(assign_node->rightNode);
       default: break;
     }
   }
@@ -273,6 +339,8 @@ create_var_declaration(T_Node* declaration_node)
       case ast_arithmetic_expression:
         value = solve_arithmetic_expression(declaration_node->rightNode->rightNode);
         break;
+      case ast_logical_expression:
+        value = solve_logical_expression(declaration_node->rightNode);
       default: break;
     }
   }
@@ -286,22 +354,23 @@ create_var_declaration(T_Node* declaration_node)
   sprintf(declaration_buffer+strlen(declaration_buffer), "%s_%s: dd 0\n", type, identifier);
   sprintf(buffer+strlen(buffer), "mov  %s, %s\n", identifier, value);
   }
-  else if(!strcmp(type, "char"))
+  if(!strcmp(type, "char"))
   {
-    // TODO: elif not needed!
     sprintf(definition_buffer+strlen(definition_buffer), "%s equ dword [%s_%s]\n", identifier, type, identifier);
     sprintf(declaration_buffer+strlen(declaration_buffer), "%s_%s: dd 0\n", type, identifier);
     sprintf(buffer+strlen(buffer), "mov  %s, %s\n", identifier, value);
   }
-  else if(!strcmp(type, "str"))
+  if(!strcmp(type, "str"))
   {
     sprintf(declaration_buffer+strlen(declaration_buffer), "%s : db %s, 0xA\n", identifier, value);
     
   }
-  else if(!strcmp(type, "bool"))
+  if(!strcmp(type, "bool"))
   {
+    if(!strcmp(value, "True")) value = "1";
+    if(!strcmp(value, "False")) value = "0";
     sprintf(definition_buffer+strlen(definition_buffer), "%s equ dword [%s_%s]\n", identifier, type, identifier);
     sprintf(declaration_buffer+strlen(declaration_buffer), "%s_%s: dd 0\n", type, identifier);
-    sprintf(buffer+strlen(buffer), "mov  %s, %s\n", identifier, !strcmp(value, "True") ? "1" : "0");
+    sprintf(buffer+strlen(buffer), "mov  %s, %s\n", identifier, value);
   }
 }
