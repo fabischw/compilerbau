@@ -10,6 +10,7 @@ LL_Node* create_stdlib_symbol_table() {
         ll_create_dataType("exit", TYP_FUNCTION, true, -1),
         ll_create_dataType("print", TYP_FUNCTION, true, -1),
         ll_create_dataType("input", TYP_FUNCTION, true, -1),
+        ll_create_dataType("int_to_string", TYP_FUNCTION, true, -1),
     };
     lib[0]->func = func_create(1, (VarType[]){TYP_ANY}, TYP_INT);
     lib[1]->func = func_create(1, (VarType[]){TYP_ANY}, TYP_STRING);
@@ -19,7 +20,8 @@ LL_Node* create_stdlib_symbol_table() {
     lib[5]->func = func_create(0, NULL, TYP_NULL);
     lib[6]->func = func_create(1, (VarType[]){TYP_STRING}, TYP_NULL);
     lib[7]->func = func_create(1, (VarType[]){TYP_STRING}, TYP_STRING);
-    int lib_size = 8;
+    lib[8]->func = func_create(1, (VarType[]){TYP_INT}, TYP_STRING);
+    int lib_size = 9;
 
     // create linked list from those dataTypes and return
 

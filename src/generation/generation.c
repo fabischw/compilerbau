@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MAX_PAGE_SIZE 1000
+#define MAX_PAGE_SIZE 2000
 
 typedef enum _Register
 {
@@ -30,6 +30,7 @@ void create_if_clause(T_Node* if_node);
 void create_function_call(T_Node* function_node);
 void create_loop(T_Node* loop_node);
 char* create_label();
+char* solve_logical_expression(T_Node* logical_expr_root);
 
 char*
 register_to_string(Register reg)
@@ -108,7 +109,7 @@ create_function_call(T_Node* function_node)
   if(strcmp(arg_buf, "") && arg_buf[0] == '\"')
   {
     char* str_label = strdup(create_label());
-    sprintf(declaration_buffer+strlen(declaration_buffer), "%s: db %s, 0xA\n", str_label, arg_buf);    
+    sprintf(declaration_buffer+strlen(declaration_buffer), "%s: db %s, 0xA, 0x0\n", str_label, arg_buf);    
     sprintf(buffer+strlen(buffer), "%s %s\n", fn_id, str_label);    
     free(str_label);
   } else
@@ -123,10 +124,11 @@ parse_operator(char* operator, int negated)
 {
   if(!strcmp(operator, "==")) return  negated ? "not_equal" : "equal";
   if(!strcmp(operator, "!=")) return  negated ? "equal" : "not_equal";
-  //TODO: add comparison operators
+  if(!strcmp(operator, "<=")) return  negated ? "lesser_or_equal" : "greater";
+  if(!strcmp(operator, ">=")) return  negated ? "greater_or_equal" : "lesser";
   if(!strcmp(operator, "<")) return  negated ? "greater_or_equal":  "lesser";
   if(!strcmp(operator, ">")) return  negated ? "lesser_or_equal":  "greater";
-  return "ERROR";
+  return operator;
 }
 
 void create_loop(T_Node* loop_node)
@@ -159,13 +161,24 @@ create_if_clause(T_Node* if_node)
 {
   T_Node* if_content = if_node->leftNode;
   T_Node* if_else = if_node->rightNode;
-  //if_content->leftNode logical expr
-  // TODO: check for multiple instructions in logical expr?!
   // // TODO: change if to just check if expr == 1 and
   // TODO: add <>= in logicalexpr
-  const char* operator = parse_operator(if_content->leftNode->value, 0);
-  char* left_side = if_content->leftNode->leftNode->value;
-  char* right_side = if_content->leftNode->rightNode->value;
+
+  //const char* operator = parse_operator(if_content->leftNode->value, 0);
+  //char* left_side = if_content->leftNode->leftNode->value;
+  //char* right_side = if_content->leftNode->rightNode->value;
+  // 
+  char* left_side;
+  if(t_is_node_empty(if_content->leftNode))
+  {
+    left_side = if_content->leftNode->value;
+  } else {
+    left_side = solve_logical_expression(if_content->leftNode);    
+  }
+  const char*  operator = "equal";
+  char* right_side = "1";
+  
+  
   char* label_if_done = strdup(create_label());
   char* label_if_exit = strdup(create_label());
   sprintf(buffer+strlen(buffer), "if %s, %s, %s, %s, %s\n%s:\n",
@@ -177,7 +190,7 @@ create_if_clause(T_Node* if_node)
   {
     char* label_else_done = strdup(create_label());
     char* label_else_exit = strdup(create_label());
-    const char* else_operator = parse_operator(if_content->leftNode->value, 1);
+    const char* else_operator = "not_equal";
     sprintf(buffer+strlen(buffer), "if %s, %s, %s, %s, %s\n%s:\n",
            left_side, else_operator, right_side,
          label_else_done, label_else_exit, label_else_done);
@@ -194,6 +207,10 @@ create_if_clause(T_Node* if_node)
 char*
 solve_logical_expression(T_Node* logical_expr_root)
 {
+  //TODO: add operator with negation
+    //TODO: füge oben single True/False support hinzu
+    // !!!
+  // see parse_operator
   char* left_id;
   char* right_id;
   char* curr_reg = register_to_string(free_register);
@@ -206,6 +223,8 @@ solve_logical_expression(T_Node* logical_expr_root)
   {
     free_register++;
     left_id = solve_logical_expression(logical_expr_root->leftNode);
+    if(!strcmp(left_id, "True")) left_id = "1";
+    if(!strcmp(left_id, "False")) left_id = "0";
     //free_register--;
   }
   if(t_is_node_empty(logical_expr_root->rightNode))
@@ -217,6 +236,8 @@ solve_logical_expression(T_Node* logical_expr_root)
   {
     free_register++;
     right_id = solve_logical_expression(logical_expr_root->rightNode); 
+    if(!strcmp(right_id, "True")) right_id =  "1";
+    if(!strcmp(right_id, "False")) right_id = "0";
     free_register--;
   }
   char* comparator = logical_expr_root->value;
@@ -224,13 +245,12 @@ solve_logical_expression(T_Node* logical_expr_root)
   {
     sprintf(buffer+strlen(buffer), "mov %s, %s\nor %s, %s\n", curr_reg, left_id, curr_reg, right_id);
   }
-  if(!strcmp(comparator, "&&"))
+  else if(!strcmp(comparator, "&&"))
   {
     sprintf(buffer+strlen(buffer), "mov %s, %s\nand %s, %s\n", curr_reg, left_id, curr_reg, right_id);
     //sprintf(buffer+strlen(buffer), "curr_reg: %s, left_id: %s, right_id: %s\n", curr_reg, left_id, right_id);
-
   }
-  if(!strcmp(comparator, ">"))
+  else if(!strcmp(comparator, ">"))
   {
     char* true_label = strdup(create_label());
     char* exit_label = strdup(create_label());
@@ -246,9 +266,27 @@ left_id, right_id, true_label, curr_reg, exit_label, true_label, curr_reg, exit_
     // mov reg, 1
     // label2:
   }
+  
+  else if(strcmp(comparator, "=") != 0)
+  {
+    char* true_label = strdup(create_label());
+    char* false_label = strdup(create_label());
+    char* jmp_label = strdup(create_label());
+    sprintf(buffer+strlen(buffer), 
+     "if %s, %s, %s, %s, %s\n%s:\nmov %s, 1\njmp %s\n%s:\nmov %s, 0\n%s:\n",
+     left_id, parse_operator(comparator, 0), right_id, true_label, false_label,
+     true_label, curr_reg, jmp_label, false_label,
+     curr_reg, jmp_label);
+
+
+    free(true_label);
+    free(false_label);
+    free(jmp_label);
+  }
+
   if(!t_is_node_empty(logical_expr_root->leftNode)) free_register--;
   //if(!t_is_node_empty(logical_expr_root->rightNode)) free_register--;
-  
+   
   return curr_reg;
 }
 
@@ -362,7 +400,7 @@ create_var_declaration(T_Node* declaration_node)
   }
   if(!strcmp(type, "str"))
   {
-    sprintf(declaration_buffer+strlen(declaration_buffer), "%s : db %s, 0xA\n", identifier, value);
+    sprintf(declaration_buffer+strlen(declaration_buffer), "%s : db %s, 0xA, 0x0\n", identifier, value);
     
   }
   if(!strcmp(type, "bool"))

@@ -29,7 +29,7 @@ mov ebx, code
 int 0x80
 }
 
-macro itos int, counter, buffer
+macro int_to_string int, counter, buffer
 {
 local .loop
 mov eax, int
