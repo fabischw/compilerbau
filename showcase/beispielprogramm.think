@@ -1,0 +1,73 @@
+# Datentypen
+
+int zahl = 5
+float gleitzahl = 6.7
+bool wahrheitswert = True
+str text = "Beispieltext"
+char symbol = 'c'
+
+int[5] feld = [1, 2, 3, 4, 5]
+str[10] namen = ["Michael", "Gottfried", "Heinz"]
+
+int summe = feld[3] + feld[2]
+
+feld[2] = -5
+
+# Operationen
+int mathe = 5 / 4 + 3 + 2 - 1
+int klammern = ((((((((1+1))) / 10)))))
+
+bool logisch = True || False && (1 < 2)
+
+# Funktionen & Typcasting
+
+str eingabe = input("Gib eine Ganzzahl ein")
+int ganzzahl = toint( eingabe )
+
+# Kontrollstrukturen
+
+if (1 < 5) {
+    
+    # tue nichts
+
+} elif (tobool("False")) {
+
+    print("Hallo")
+
+} else {
+
+    exit()
+
+}
+
+int c = 0
+while (c != 3) 
+{
+    c+=1
+}
+
+
+
+# Besonderheiten
+
+## optionales semicolon
+print("123"); print("456\n");
+
+## verkettete zuweisungen
+
+int a = 0;
+
+while ( (a=a+1) < 10 ) {
+    print(tostr(a))
+}
+
+# Konstanten
+const int ka = 5
+const int kb = 2
+
+const int konstante = (ka * 5) + kb
+
+const float kc = 2.5
+const float kf = 3.1415
+
+const float kfc = (kc * 2.0) ^ kf
