@@ -277,6 +277,11 @@ main(int argc, char** argv)
         extern int yydebug;
         yydebug = 0;
         yyin = fopen(argv[1], "r");
+        if (!yyin) { // check if file exists
+            fprintf(stderr, "Error: Could not open file '%s'\n", argv[1]);
+            return 1;
+        }
+        
         yyparse();
         fclose(yyin);
         printf("\nSyntactic analysis finshed with %d errors\n", error_count);
