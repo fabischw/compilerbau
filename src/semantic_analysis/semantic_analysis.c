@@ -3,21 +3,24 @@
 #include "../tree/ast_type.h"
 #include "../linked_list/linked_list.h"
 #include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
 
 
-int sem_error(const char* s, T_Node* ast_node);
+int sem_error_count;
+
+int sem_error(T_Node* ast_node, const char* fmt, ...);
 
 int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
     if (ast_node == NULL) return 0;
-    int errCount = 0;
 
     if (!(  // don't do postorder traversal for some node types
         ast_node->ast_type == ast_variable_declaration ||
         ast_node->ast_type == ast_variable_declaration_const ||
         ast_node->ast_type == ast_function_call
     )) {
-        errCount += sem_postorder(ast_node->rightNode, symbol_table);
-        errCount += sem_postorder(ast_node->leftNode, symbol_table);
+        sem_postorder(ast_node->rightNode, symbol_table);
+        sem_postorder(ast_node->leftNode, symbol_table);
     } 
 
     
@@ -30,18 +33,22 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
 
     switch (ast_node->ast_type)
     {
+        dataType* symbol;
+
         case ast_logical_expression:
             switch (ast_node->operator) {
                 case OP_AND:
                 case OP_OR:
                     if ((leftType != TYP_BOOLEAN || rightType != TYP_BOOLEAN)) {
-                        sem_error("Boolean expected", ast_node);
+                        sem_error(ast_node, "Logical operation on type %s and %s", 
+                            vartype_to_string(leftType), vartype_to_string(rightType));
                     }
                     break;
                 case OP_IS_EQUAL:
                 case OP_NOT_EQUAL:
                     if (!(leftType == rightType)) {
-                        sem_error("Values not of same type", ast_node);
+                        sem_error(ast_node, "Equality check on type %s and %s", 
+                            vartype_to_string(leftType), vartype_to_string(rightType));
                     }
                     break;
                 case OP_LESS_EQUAL:
@@ -49,11 +56,12 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
                 case OP_LESS:
                 case OP_GREATER:
                     if (!is_vartype_numeric(leftType) || !is_vartype_numeric(rightType)) {
-                        sem_error("Numeric type expected", ast_node);
+                        sem_error(ast_node, "Comparison operation on type %s and %s",
+                        vartype_to_string(leftType), vartype_to_string(rightType));
                     }
                     break;
                 default:
-                    sem_error("Unknown Operator detected, help :/", ast_node);
+                    sem_error(ast_node, "Unknown Operator detected, help :/");
                     break;
             }
             ast_node->var_type = TYP_BOOLEAN;
@@ -61,10 +69,12 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
 
         case ast_arithmetic_expression:
             if (!is_vartype_numeric(leftType) || !is_vartype_numeric(rightType)) {
-                sem_error("Numeric type expected", ast_node);
+                sem_error(ast_node, "Arithmetic operation on non-numeric type %s and %s",
+                    vartype_to_string(leftType), vartype_to_string(rightType));
             }
             else if (!(leftType == rightType)) {
-                sem_error("Values not of same type", ast_node);
+                sem_error(ast_node, "Arithmetic operation on unequal type %s and %s",
+                    vartype_to_string(leftType), vartype_to_string(rightType));
             }
             ast_node->var_type = leftType;
             break;
@@ -74,18 +84,19 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
                 case OP_PLUS:
                 case OP_MINUS:
                     if (!is_vartype_numeric(leftType)) {
-                        sem_error("Numeric type expected", ast_node);
+                        sem_error(ast_node, "Arithmetic operation on non-numeric type %s",
+                            vartype_to_string(leftType));
                     }
                     ast_node->var_type = leftType;
                     break;
                 case OP_BANG:
                     if (leftType != TYP_BOOLEAN) {
-                        sem_error("Boolean type expected", ast_node);
+                        sem_error(ast_node, "Logical operation on type", leftType);
                     }
                     ast_node->var_type = TYP_BOOLEAN;
                     break;
                 default:
-                    sem_error("Unknown Operator detected, help :/", ast_node);
+                    sem_error(ast_node, "Unknown Operator detected, help :/");
                     break;
             }
             break;
@@ -100,12 +111,9 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
             _decl_is_const = true;
         case ast_variable_declaration:          // this node does not follow default postorder traversal
             identifier = ast_node->rightNode->leftNode->value;
-            dataType* symbol;
 
             if (ll_contains_value_id(symbol_table, identifier)) {
-                char temp[100];
-                sprintf(temp,"Symbol '%s' already defined", identifier);
-                sem_error(temp, ast_node);
+                sem_error(ast_node, "Redeclaration of variable '%s'", identifier);
                 break;
             }
 
@@ -114,7 +122,8 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
                 sem_postorder(ast_node->leftNode->rightNode, symbol_table); // check array length expression
                 if (ast_node->leftNode->rightNode->var_type != TYP_INT &&
                     ast_node->leftNode->rightNode->var_type != TYP_CHARACTER) {
-                        sem_error("Expected integer or character as array index", ast_node);
+                        sem_error(ast_node, "Non numeric array index of type %s",
+                            vartype_to_string(ast_node->leftNode->rightNode->var_type));
                 }
             } else {
                 var_type = ast_node->leftNode->var_type;
@@ -123,9 +132,8 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
 
             VarType exp_typ = ast_node->rightNode->rightNode->var_type;
             if (var_type != exp_typ && !(is_vartype_array(var_type) && exp_typ == TYP_ARRAY_EMPTY)) {
-                char temp[100];
-                sprintf(temp, "Cannot assign %s to %s", vartype_to_string(exp_typ), vartype_to_string(var_type));
-                sem_error(temp, ast_node);
+                sem_error(ast_node, "Assignment of %s to %s", 
+                    vartype_to_string(exp_typ), vartype_to_string(var_type));
             }
 
             // add to symbol table
@@ -142,76 +150,81 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
             else if (ast_node->leftNode->ast_type == ast_array_indexing) {
                 identifier = ast_node->leftNode->leftNode->value;
             } else {
-                sem_error("Can only assign to IDENTIFIER or ARRAY.", ast_node);
+                sem_error(ast_node, "Assigning value to %s",
+                    ast_type_to_string(ast_node->leftNode->ast_type));
                 break;
             }
 
-            if (!ll_contains_value_id(symbol_table, identifier)) break;
+            symbol = ll_get_by_value_id(symbol_table, identifier);
+
+            if (symbol == NULL) break;
 
             if (leftType != rightType && !(is_vartype_array(leftType) && rightType == TYP_ARRAY_EMPTY)) {
-                char temp[100];
-                sprintf(temp, "Cannot assign %s to %s", vartype_to_string(rightType), vartype_to_string(leftType));
-                sem_error(temp, ast_node);
+                sem_error(ast_node, "Assignment of %s to %s", 
+                    vartype_to_string(rightType), vartype_to_string(leftType));
             }
 
             ast_node->var_type = leftType;
 
-            symbol = ll_get_by_value_id(symbol_table, identifier);
             if (symbol->is_constant) {
-                sem_error("Cannot assign to constant value", ast_node);
+                sem_error(ast_node, "Assignment to constant variable");
             }
             break;
 
         case ast_IDENTIFIER:
             identifier = ast_node->value;
-            if (!ll_contains_value_id(symbol_table, identifier)) {
-                char temp[100];
-                sprintf(temp, "Symbol '%s' not defined", identifier);
-                sem_error(temp, ast_node);
+            symbol = ll_get_by_value_id(symbol_table, identifier);
+            // check if variable is defined in symbol table
+            if (symbol == NULL) {
+                sem_error(ast_node, "Undefined variable '%s'", identifier);
                 break;
             }
-            var_type = ll_get_by_value_id(symbol_table, identifier)->var_type;
-            ast_node->var_type = var_type;
+            ast_node->var_type = symbol->var_type;
             break;
+
         case ast_array_indexing:
             if (!is_vartype_array(leftType)) {
-                sem_error("Can only index array type", ast_node);
+                sem_error(ast_node, "Indexing of %s type", vartype_to_string(leftType));
             }
             if (rightType != TYP_INT && rightType != TYP_CHARACTER) {
-                sem_error("Expected integer or character as array index", ast_node);
+                sem_error(ast_node, "Non numeric array index of type %s",
+                    vartype_to_string(rightType));
             }
             ast_node->var_type = unwrap_array_type(ast_node->leftNode->var_type);
             break;
 
         case ast_function_call:     // this node does not follow default postorder traversal
+            // retrieve identifier name from children
             identifier = ast_node->leftNode->value;
-            if (!ll_contains_value_id(symbol_table, identifier)) {
-                char temp[100];
-                sprintf(temp, "Symbol '%s' not defined", identifier);
-                sem_error(temp, ast_node);
+            
+            // check if symbol table contains the function
+            symbol = ll_get_by_value_id(symbol_table, identifier);
+            if (symbol == NULL) {
+                sem_error(ast_node, "Undefined function '%s'", identifier);
                 break;
             }
-            symbol = ll_get_by_value_id(symbol_table, identifier);
-            if (symbol->var_type != TYP_FUNCTION) {
-                char temp[100];
-                sprintf(temp, "Symbol '%s' is not a function", identifier);
-                sem_error(temp, ast_node);
+            else if (symbol->var_type != TYP_FUNCTION) {
+                sem_error(ast_node, "Symbol '%s' is not a function", identifier);
                 break;
             }
             
+            // check if parameter types and count match definition in symbol table
             int counter = symbol->func->parameter_count;
             VarType* param_types = symbol->func->parameter_types;
             T_Node* parameter = ast_node;
 
+            // count how many parameters where given
             int given_params = 0;
             while ((parameter = parameter->rightNode) != NULL) given_params++;
+            // parameter count doesn't match
             if (given_params!=symbol->func->parameter_count) {
                     char temp[100];
-                    sprintf(temp, "Function expected %lu arguments, %d were given", symbol->func->parameter_count, given_params);
-                    sem_error(temp, ast_node);
+                    sprintf(temp, "Function expects %lu arguments, %d were given", symbol->func->parameter_count, given_params);
+                    sem_error(ast_node, temp);
                     break;
             }
 
+            // compare types of parameters
             param_types = param_types+counter-1;
             parameter = ast_node;
             while ((parameter = parameter->rightNode) != NULL) {
@@ -219,22 +232,22 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
                 if ((*param_types != TYP_ANY) && parameter->leftNode->var_type != *param_types) {
                     char temp[100];
                     sprintf(temp, "Parameter %d has unexpected type", counter);
-                    sem_error(temp, ast_node);
+                    sem_error(ast_node, temp);
                 }
                 param_types--;
                 counter--;
             }
-
+            
             ast_node->var_type = symbol->func->return_type;
             break;
 
         case ast_parameters:
-            sem_error("This statement should not be encountered", ast_node);
+            sem_error(ast_node, "This statement should not be encountered");
             break;
 
 
         case ast_array_declaration:
-            sem_error("This statement should not be encountered", ast_node);
+            sem_error(ast_node, "This statement should not be encountered");
             break;
         case ast_array:
             if (ast_node->leftNode == NULL) {
@@ -246,20 +259,21 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
 
         case ast_array_item:
             if (rightType != TYP_NULL && leftType != rightType) {
-                sem_error("Expected array items to be of same type", ast_node);
+                sem_error(ast_node, "Array items of unequal type %s and %s", 
+                    vartype_to_string(leftType), vartype_to_string(rightType));
             }
             ast_node->var_type = leftType;
             break;
 
         case ast_loop_declaration:
             if (leftType != TYP_BOOLEAN) {
-                sem_error("Loop condition expects Boolean", ast_node);
+                sem_error(ast_node, "Loop condition of type %s", vartype_to_string(leftType));
             }
             break;
 
         case ast_condition_content:
             if (leftType != TYP_BOOLEAN) {
-                sem_error("If condition expects Boolean", ast_node);
+                sem_error(ast_node, "If condition of type %s", vartype_to_string(leftType));
             }
             break;
         
@@ -270,19 +284,28 @@ int sem_postorder(T_Node* ast_node, LL_Node* symbol_table) {
         case ast_statement:
             break;
         default:
-            sem_error("Unhandled AST Node Type detected. Help :/", ast_node);
+            sem_error(ast_node, "Unhandled AST Node Type detected. Help :/");
             break;
     }
 }
 
 int semantic_analysis(T_Node* ast_root, LL_Node* symbol_table) {
+    sem_error_count = 0;
     sem_postorder(ast_root, symbol_table);
-    return 0;
+    return sem_error_count;
 }
 
-int
-sem_error(const char* s, T_Node* ast_node)
-{
-    fprintf(stderr, "Error in line: %d, %s\n", ast_node->lineno, s);
+int 
+sem_error(T_Node* ast_node, const char* fmt, ...) {
+    sem_error_count++;
+
+    char msg[1024];  
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(msg, sizeof(msg), fmt, args);
+    va_end(args);
+
+    fprintf(stderr, "Error in line %d: %s\n", ast_node->lineno, msg);
+
     return 1;
 }

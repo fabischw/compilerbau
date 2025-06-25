@@ -16,8 +16,19 @@
 
 digit [0-9]
 alpha [a-zA-Z]
+alphap [_a-zA-Z]
 
 %% 
+
+#[^\n]* ;
+
+\"([^\"\\\n]|\\.)*\"        { strcpy(yylval.token_obj.content, (yytext)); return (STRING); }
+\'.?\'                      { strcpy(yylval.token_obj.content, (yytext)); return (CHARACTER); }
+
+{digit}+                    { strcpy(yylval.token_obj.content, (yytext)); return (INTEGER);  }
+{digit}*\.{digit}*          { strcpy(yylval.token_obj.content, (yytext)); return (FLOAT); }
+
+(True|False)                { strcpy(yylval.token_obj.content, (yytext)); return (BOOLEAN); }
 
 "if"                        { strcpy(yylval.token_obj.content, (yytext)); return (CONDITION_IF); }
 "elif"                      { strcpy(yylval.token_obj.content, (yytext)); return (CONDITION_ELIF); }
@@ -29,14 +40,6 @@ alpha [a-zA-Z]
 "str"                       { strcpy(yylval.token_obj.content, (yytext)); return (TYPE_STR); }
 "char"                      { strcpy(yylval.token_obj.content, (yytext)); return (TYPE_CHAR); }
 "const"                     { strcpy(yylval.token_obj.content, (yytext)); return (CONSTANT); }
-
-(True|False)                { strcpy(yylval.token_obj.content, (yytext)); return (BOOLEAN); }
-{alpha}({alpha}|{digit})*   { strcpy(yylval.token_obj.content, (yytext)); return (IDENTIFIER); }
-
-{digit}+                    { strcpy(yylval.token_obj.content, (yytext)); return (INTEGER);  }
-{digit}*\.{digit}*          { strcpy(yylval.token_obj.content, (yytext)); return (FLOAT); }
-\"[^\"\\n]*\"               { strcpy(yylval.token_obj.content, (yytext)); return (STRING); }
-\'.?\'                      { strcpy(yylval.token_obj.content, (yytext)); return (CHARACTER); }
 
 "||"                        { strcpy(yylval.token_obj.content, (yytext)); return (OR); }
 "&&"                        { strcpy(yylval.token_obj.content, (yytext)); return (AND); }
@@ -65,11 +68,14 @@ alpha [a-zA-Z]
 "]"                         { strcpy(yylval.token_obj.content, (yytext)); return (']'); }
 ","                         { strcpy(yylval.token_obj.content, (yytext)); return (','); }
 "!"                         { strcpy(yylval.token_obj.content, (yytext)); return (BANG); }
-";"                         { strcpy(yylval.token_obj.content, (yytext)); return (';'); }
 
-[\r?\n]                        { return (NEWLINE); }
-#[^\n]* ;
+
+{alphap}({alphap}|{digit})*   { strcpy(yylval.token_obj.content, (yytext)); return (IDENTIFIER); }
+
+
 [ \t] ;
+[\r\n;\t ]+						{ return (SEPERATOR); }
+
 . {yyerror("unknown symbol"); };
 
 %%
