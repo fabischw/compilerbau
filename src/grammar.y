@@ -40,6 +40,7 @@
     } token_obj;
 }
 
+%token <token_obj> SEPERATOR 
 %token <token_obj> TYPE_INT TYPE_FLOAT TYPE_BOOL TYPE_STR TYPE_CHAR 
 %token <token_obj> CONSTANT
 %token <token_obj> IDENTIFIER
@@ -48,7 +49,6 @@
 %token <token_obj> CONDITION_IF CONDITION_ELIF CONDITION_ELSE
 %token <token_obj> WHILE
 %token <token_obj> LESS_EQUAL GREATER_EQUAL IS_EQUAL NOT_EQUAL
-%token <token_obj> NEWLINE
 %token <token_obj> PLUS_EQUAL MINUS_EQUAL MUL_EQUAL DIV_EQUAL
 %token <token_obj> EQUAL PLUS MINUS MULT DIV MODULO EXP LESS GREATER BANG ','
 
@@ -78,28 +78,26 @@ program:
 
 body:
                                             {DP(body1); $$.node = NULL; }
-    | statement_seperator_optional statement statement_seperator_optional                       {DP(body2); $$.node = $2.node; }
-    | statement_seperator_optional statement_list statement statement_seperator_optional    {DP(body3); $$.node = ast_node(ast_statement, NULL, $3.node, $2.node); }
+    | seperator                   {DP(body2); $$.node = NULL; }
+    | optional_seperator statement optional_seperator                       {DP(body3); $$.node = $2.node; }
+    | optional_seperator statement_list statement optional_seperator    {DP(body4); $$.node = ast_node(ast_statement, NULL, $3.node, $2.node); }
+    | optional_seperator condition_if                        {DP(body3); $$.node = $2.node; }
+    | optional_seperator statement_list condition_if    {DP(body4); $$.node = ast_node(ast_statement, NULL, $3.node, $2.node); }
     ;
-
-// | body statement_seperator statement            {DP(body4); $$.node =  }
 
 statement_list:
-    statement_list statement statement_seperator    {DP(statement_list1); $$.node = ast_node(ast_statement, NULL, $2.node, $1.node); }
-    | statement statement_seperator                 {DP(statement_list2); $$.node = $1.node; }
+    statement_list statement seperator    {DP(statement_list1); $$.node = ast_node(ast_statement, NULL, $2.node, $1.node); }
+    | statement seperator                {DP(statement_list2); $$.node = $1.node; }
+    | statement_list condition_if    {DP(statement_list1); $$.node = ast_node(ast_statement, NULL, $2.node, $1.node); }
+    | condition_if                {DP(statement_list2); $$.node = $1.node; }
     ;
 
-// note: body can be empty
-
-statement_seperator:
-    NEWLINE
-    | NEWLINE statement_seperator
-    | ';'
-    | ';' statement_seperator
+seperator:
+    SEPERATOR | seperator SEPERATOR
     ;
 
-statement_seperator_optional:
-    | statement_seperator
+optional_seperator:
+    | seperator
     ;
 
 // -- statements --
@@ -107,29 +105,33 @@ statement_seperator_optional:
 statement:
     expression                      {DP(statement1); $$.node = $1.node; }
     | variable_declaration          {DP(statement2); $$.node = $1.node; }
-    | condition_if                  {DP(statement3); $$.node = $1.node; }
     | loop_declaration              {DP(statement4); $$.node = $1.node; }
     ;
 
 loop_declaration:
-    WHILE '(' expression ')' optional_newline '{' body '}'      {DP(loop_declaration1); $$.node = ast_node(ast_loop_declaration, NULL, $3.node, $7.node); }
+    WHILE '(' expression ')' optional_seperator '{' body '}'      {DP(loop_declaration1); $$.node = ast_node(ast_loop_declaration, NULL, $3.node, $7.node); }
 
 condition_if:
-    CONDITION_IF '(' expression ')' optional_newline '{' body '}' condition_elif        {DP(condition_if1); 
+    CONDITION_IF '(' expression ')' optional_seperator '{' body '}' optional_seperator condition_elif        {DP(condition_if1); 
         T_Node *branch = ast_node(ast_condition_content, NULL, $3.node, $7.node); 
-        $$.node = ast_node(ast_condition_if, NULL, branch, $9.node); }
+        $$.node = ast_node(ast_condition_if, NULL, branch, $10.node); }
+    | CONDITION_IF '(' expression ')' optional_seperator '{' body '}' optional_seperator                     {DP(condition_if1); 
+        T_Node *branch = ast_node(ast_condition_content, NULL, $3.node, $7.node); 
+        $$.node = ast_node(ast_condition_if, NULL, branch, NULL); }
     ;
 
 condition_elif:
     condition_else        {DP(condition_elif1); $$.node = $1.node; }
-    | NEWLINE condition_elif        {DP(condition_elif2); $$.node = $2.node; }
-    | CONDITION_ELIF '(' expression ')' optional_newline '{' body '}' condition_elif        {DP(condition_elif3); 
+    | CONDITION_ELIF '(' expression ')' optional_seperator '{' body '}' optional_seperator condition_elif        {DP(condition_elif3); 
         T_Node *branch = ast_node(ast_condition_content, NULL, $3.node, $7.node);
-         $$.node = ast_node(ast_condition_elif, NULL, branch, $9.node); }
+         $$.node = ast_node(ast_condition_elif, NULL, branch, $10.node); }
+    | CONDITION_ELIF '(' expression ')' optional_seperator '{' body '}' optional_seperator       {DP(condition_elif3); 
+        T_Node *branch = ast_node(ast_condition_content, NULL, $3.node, $7.node);
+         $$.node = ast_node(ast_condition_elif, NULL, branch, NULL); }
+    ;
 
 condition_else:
-                                                          {DP(condition_else0); $$.node = NULL; }
-    | CONDITION_ELSE optional_newline '{' body '}'        {DP(condition_else1); $$.node = ast_node(ast_condition_else, NULL, $4.node, NULL); }
+    CONDITION_ELSE optional_seperator '{' body '}' optional_seperator        {DP(condition_else1); $$.node = ast_node(ast_condition_else, NULL, $4.node, NULL); }
     ;
 
 variable_declaration:
@@ -259,9 +261,6 @@ datatype:
     | TYPE_CHAR     {DP(datatype5); $$.node = ast_node(ast_datatype, $1.content, NULL, NULL); $$.node->var_type = TYP_CHARACTER; }
     ;
 
-optional_newline:
-    | NEWLINE optional_newline
-    ;
     
 %%
 
@@ -278,14 +277,20 @@ main(int argc, char** argv)
         yydebug = 0;
         yyin = fopen(argv[1], "r");
         yyparse();
+        fclose(yyin);
+        printf("\nSyntactic analysis finshed with %d errors\n", error_count);
+        if (error_count > 0) return 1;
+
         printf("--- AST Created ---\n");
         t_traverse(root);
+
         printf("--- Begin Type Checking ---\n");
         symbol_table = create_stdlib_symbol_table();
-        semantic_analysis(root, symbol_table);
+        int type_checking_errors = semantic_analysis(root, symbol_table);
+        printf("\nSemantic analysis finished with %d errors\n", type_checking_errors);
+        if (type_checking_errors > 0) return 1;
         printf("--- Type Checking Done ---\n");
-        ll_print_linked_list(symbol_table);
-        fclose(yyin);
+
         printf("\n--- Performing constant folding optimizations ---\n");
         perform_folding(&root, symbol_table);
         printf("--- Constant folding done. ---\nOptimized AST and symbol table below:\n\n");
@@ -295,7 +300,10 @@ main(int argc, char** argv)
             printf("(AST is empty after optimization)\n");
         }
         printf("\n\n\n");
+
         ll_print_linked_list(symbol_table);
+
+        printf("\nThinking was successful.");
     }
     else {
         printf (">>> Please type in any input:\n");
