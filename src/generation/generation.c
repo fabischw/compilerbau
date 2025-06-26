@@ -340,9 +340,9 @@ solve_arithmetic_expression(T_Node* arith_expr_root)
   }
   else if(!strcmp(arith_expr_root->value, "/"))
   {
-    
+      
+    sprintf(buffer+strlen(buffer),"mov eax, %s\nmov ebx, %s\nxor edx, edx\ndiv ebx\nmov %s, eax\n",left_id, right_id, curr_reg);
   }
-  // ...
   return curr_reg;
 }
 
