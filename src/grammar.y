@@ -78,19 +78,19 @@ program:
     ;
 
 body:
-                                            {DP(body1); $$.node = NULL; }
-    | seperator                   {DP(body2); $$.node = NULL; }
-    | optional_seperator statement optional_seperator                       {DP(body3); $$.node = $2.node; }
+                                                                        {DP(body1); $$.node = NULL; }
+    | seperator                                                         {DP(body2); $$.node = NULL; }
+    | optional_seperator statement optional_seperator                   {DP(body3); $$.node = $2.node; }
     | optional_seperator statement_list statement optional_seperator    {DP(body4); $$.node = ast_node(ast_statement, NULL, $3.node, $2.node); }
-    | optional_seperator condition_if                        {DP(body3); $$.node = $2.node; }
-    | optional_seperator statement_list condition_if    {DP(body4); $$.node = ast_node(ast_statement, NULL, $3.node, $2.node); }
+    | optional_seperator condition_if                                   {DP(body5); $$.node = $2.node; }
+    | optional_seperator statement_list condition_if                    {DP(body6); $$.node = ast_node(ast_statement, NULL, $3.node, $2.node); }
     ;
 
 statement_list:
-    statement_list statement seperator    {DP(statement_list1); $$.node = ast_node(ast_statement, NULL, $2.node, $1.node); }
-    | statement seperator                {DP(statement_list2); $$.node = $1.node; }
-    | statement_list condition_if    {DP(statement_list1); $$.node = ast_node(ast_statement, NULL, $2.node, $1.node); }
-    | condition_if                {DP(statement_list2); $$.node = $1.node; }
+    statement_list statement seperator                                  {DP(statement_list1); $$.node = ast_node(ast_statement, NULL, $2.node, $1.node); }
+    | statement seperator                                               {DP(statement_list2); $$.node = $1.node; }
+    | statement_list condition_if                                       {DP(statement_list3); $$.node = ast_node(ast_statement, NULL, $2.node, $1.node); }
+    | condition_if                                                      {DP(statement_list4); $$.node = $1.node; }
     ;
 
 seperator:
@@ -104,13 +104,13 @@ optional_seperator:
 // -- statements --
 
 statement:
-    expression                      {DP(statement1); $$.node = $1.node; }
-    | variable_declaration          {DP(statement2); $$.node = $1.node; }
-    | loop_declaration              {DP(statement4); $$.node = $1.node; }
+    expression                                                          {DP(statement1); $$.node = $1.node; }
+    | variable_declaration                                              {DP(statement2); $$.node = $1.node; }
+    | loop_declaration                                                  {DP(statement3); $$.node = $1.node; }
     ;
 
 loop_declaration:
-    WHILE '(' expression ')' optional_seperator '{' body '}'      {DP(loop_declaration1); $$.node = ast_node(ast_loop_declaration, NULL, $3.node, $7.node); }
+    WHILE '(' expression ')' optional_seperator '{' body '}'            {DP(loop_declaration1); $$.node = ast_node(ast_loop_declaration, NULL, $3.node, $7.node); }
 
 condition_if:
     CONDITION_IF '(' expression ')' optional_seperator '{' body '}' optional_seperator condition_elif        {DP(condition_if1); 
@@ -123,10 +123,10 @@ condition_if:
 
 condition_elif:
     condition_else        {DP(condition_elif1); $$.node = $1.node; }
-    | CONDITION_ELIF '(' expression ')' optional_seperator '{' body '}' optional_seperator condition_elif        {DP(condition_elif3); 
+    | CONDITION_ELIF '(' expression ')' optional_seperator '{' body '}' optional_seperator condition_elif    {DP(condition_elif3); 
         T_Node *branch = ast_node(ast_condition_content, NULL, $3.node, $7.node);
          $$.node = ast_node(ast_condition_elif, NULL, branch, $10.node); }
-    | CONDITION_ELIF '(' expression ')' optional_seperator '{' body '}' optional_seperator       {DP(condition_elif3); 
+    | CONDITION_ELIF '(' expression ')' optional_seperator '{' body '}' optional_seperator                   {DP(condition_elif3); 
         T_Node *branch = ast_node(ast_condition_content, NULL, $3.node, $7.node);
          $$.node = ast_node(ast_condition_elif, NULL, branch, NULL); }
     ;
@@ -201,20 +201,20 @@ binary_expr:
 
     | binary_expr LESS_EQUAL binary_expr        {DP(binary_expr5); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_LESS_EQUAL; }
     | binary_expr GREATER_EQUAL binary_expr     {DP(binary_expr6); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_GREATER_EQUAL; }
-    | binary_expr LESS binary_expr               {DP(binary_expr8); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_LESS; }
-    | binary_expr GREATER binary_expr               {DP(binary_expr9); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_GREATER; }
+    | binary_expr LESS binary_expr              {DP(binary_expr8); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_LESS; }
+    | binary_expr GREATER binary_expr           {DP(binary_expr9); $$.node = ast_node(ast_logical_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_GREATER; }
 
-    | binary_expr PLUS binary_expr               {DP(binary_expr10); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_PLUS; }
-    | binary_expr MINUS binary_expr               {DP(binary_expr11); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_MINUS; }
-    | binary_expr MULT binary_expr               {DP(binary_expr12); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_MULT; }
+    | binary_expr PLUS binary_expr              {DP(binary_expr10); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_PLUS; }
+    | binary_expr MINUS binary_expr             {DP(binary_expr11); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_MINUS; }
+    | binary_expr MULT binary_expr              {DP(binary_expr12); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_MULT; }
     | binary_expr DIV binary_expr               {DP(binary_expr13); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_DIV; }
     | binary_expr EXP binary_expr               {DP(binary_expr14); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_EXP; }
-    | binary_expr MODULO binary_expr               {DP(binary_expr15); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_MODULO; }
+    | binary_expr MODULO binary_expr            {DP(binary_expr15); $$.node = ast_node(ast_arithmetic_expression, $2.content, $1.node, $3.node); $$.node->operator = OP_MODULO; }
     ;
 
 unary_expr:
-    postfix_expr            {DP(unary_expr1); $$.node = $1.node; }
-    | MINUS unary_expr        {DP(unary_expr2); $$.node = ast_node(ast_unary_expression, $1.content, $2.node, NULL); $$.node->operator = OP_MINUS; }
+    postfix_expr             {DP(unary_expr1); $$.node = $1.node; }
+    | MINUS unary_expr       {DP(unary_expr2); $$.node = ast_node(ast_unary_expression, $1.content, $2.node, NULL); $$.node->operator = OP_MINUS; }
     | PLUS unary_expr        {DP(unary_expr3); $$.node = ast_node(ast_unary_expression, $1.content, $2.node, NULL); $$.node->operator = OP_PLUS; }
     | BANG unary_expr        {DP(unary_expr4); $$.node = ast_node(ast_unary_expression, $1.content, $2.node, NULL); $$.node->operator = OP_BANG; }
     ;
@@ -247,7 +247,7 @@ primary_expr:
 
 arr_expr:
     '[' arr_body ']'        {DP(arr_expr1); $$.node = ast_node(ast_array, NULL, $2.node, NULL); }
-    |'['  ']'        {DP(arr_expr1); $$.node = ast_node(ast_array, NULL, NULL, NULL); }
+    |'['  ']'               {DP(arr_expr1); $$.node = ast_node(ast_array, NULL, NULL, NULL); }
     ;
 
 arr_body:
@@ -272,8 +272,14 @@ T_Node* ast_node(AstType ast_type, char *value, T_Node* left, T_Node* right) {
 int
 main(int argc, char** argv)
 {
-    if(argc == 2)
+    if(argc >= 2)
     {
+        // arg parsing 
+        bool perform_codegen = false;
+        if (argc == 3) {
+            perform_codegen = (strcmp(argv[2], "--codegen") == 0);
+        }
+
         extern int yydebug;
         yydebug = 0;
         yyin = fopen(argv[1], "r");
@@ -310,7 +316,7 @@ main(int argc, char** argv)
         ll_print_linked_list(symbol_table);
 
         printf("\n--- Performing code generation ---\n");
-        generate_assembly(root);
+        if (perform_codegen) generate_assembly(root);
 
         printf("\nThinking was successful.");
     }

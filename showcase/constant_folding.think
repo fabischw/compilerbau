@@ -1,0 +1,6 @@
+const int a = 6 * 3
+const int b = a * 7
+int c = 8 * 4 * a + b
+
+
+print(tostr(c))

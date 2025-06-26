@@ -1,0 +1,146 @@
+program:
+    body		
+    ;
+
+body:
+    | seperator                  
+    | optional_seperator statement optional_seperator                      
+    | optional_seperator statement_list statement optional_seperator   
+    | optional_seperator condition_if                       
+    | optional_seperator statement_list condition_if   
+    ;
+
+statement_list:
+    statement_list statement seperator   
+    | statement seperator               
+    | statement_list condition_if   
+    | condition_if               
+    ;
+
+seperator:
+    SEPERATOR | seperator SEPERATOR
+    ;
+
+optional_seperator:
+    | seperator
+    ;
+
+
+statement:
+    expression                     
+    | variable_declaration         
+    | loop_declaration             
+    ;
+
+loop_declaration:
+    WHILE '(' expression ')' optional_seperator '{' body '}'     
+
+condition_if:
+    CONDITION_IF '(' expression ')' optional_seperator '{' body '}' optional_seperator condition_elif       
+    | CONDITION_IF '(' expression ')' optional_seperator '{' body '}' optional_seperator                    
+    ;
+
+condition_elif:
+    condition_else       
+    | CONDITION_ELIF '(' expression ')' optional_seperator '{' body '}' optional_seperator condition_elif       
+    | CONDITION_ELIF '(' expression ')' optional_seperator '{' body '}' optional_seperator      
+    ;
+
+condition_else:
+    CONDITION_ELSE optional_seperator '{' body '}' optional_seperator       
+    ;
+
+variable_declaration:
+    datatype IDENTIFIER EQUAL expression                                    
+    | CONSTANT datatype IDENTIFIER EQUAL expression                         
+    | datatype '[' expression ']' IDENTIFIER EQUAL expression                
+    | CONSTANT datatype '[' expression ']' IDENTIFIER EQUAL expression       
+    ;
+    
+
+
+expression:
+    assignment_expr    
+    ;
+
+assignment_expr:
+    binary_expr                                    
+    | postfix_expr PLUS_EQUAL assignment_expr      
+    | postfix_expr MINUS_EQUAL assignment_expr     
+    | postfix_expr MUL_EQUAL assignment_expr       
+    | postfix_expr DIV_EQUAL assignment_expr       
+    | postfix_expr EQUAL assignment_expr             
+    ;
+
+
+binary_expr:
+    unary_expr                                 
+    | binary_expr AND binary_expr              
+    | binary_expr OR binary_expr               
+
+    | binary_expr IS_EQUAL binary_expr         
+    | binary_expr NOT_EQUAL binary_expr        
+
+    | binary_expr LESS_EQUAL binary_expr       
+    | binary_expr GREATER_EQUAL binary_expr    
+    | binary_expr LESS binary_expr              
+    | binary_expr GREATER binary_expr              
+
+    | binary_expr PLUS binary_expr              
+    | binary_expr MINUS binary_expr              
+    | binary_expr MULT binary_expr              
+    | binary_expr DIV binary_expr              
+    | binary_expr EXP binary_expr              
+    | binary_expr MODULO binary_expr              
+    ;
+
+unary_expr:
+    postfix_expr           
+    | MINUS unary_expr       
+    | PLUS unary_expr       
+    | BANG unary_expr       
+    ;
+
+
+postfix_expr:
+    primary_expr                           
+    | postfix_expr '[' expression ']'       
+    | postfix_expr '(' parameter_list ')'  
+    | postfix_expr '(' ')'                 
+    ;
+
+parameter_list:
+    assignment_expr                        
+    | parameter_list ',' assignment_expr   
+    ;
+
+
+primary_expr:
+    INTEGER                
+    | arr_expr             
+    | FLOAT                
+    | BOOLEAN              
+    | STRING               
+    | CHARACTER            
+    | IDENTIFIER           
+    | '(' expression ')'   
+    ;
+
+arr_expr:
+    '[' arr_body ']'       
+    |'['  ']'       
+    ;
+
+arr_body:
+    expression                     
+    | arr_body ',' expression      
+
+datatype:
+    TYPE_INT       
+    | TYPE_FLOAT   
+    | TYPE_BOOL    
+    | TYPE_STR     
+    | TYPE_CHAR    
+    ;
+
+    
