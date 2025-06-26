@@ -30,12 +30,12 @@ int 0x80
 }
 
 
-macro tostr eax_input {
+macro tostr int {
 
-    mov eax, eax_input   ; Load the integer to convert
+    mov eax, int 
     imul eax, 10
-    mov edi, conversion_buffer + 11  ; Point to end of buffer
-    mov byte [edi], 0    ; Null terminator
+    mov edi, conversion_buffer + 11
+    mov byte [edi], 0    
     dec edi
 
     test eax, eax
@@ -50,15 +50,15 @@ macro tostr eax_input {
 
 .loop:
     xor edx, edx
-    div ebx             ; EAX / 10, remainder in EDX
-    add dl, '0'         ; Convert digit to ASCII
+    div ebx             
+    add dl, '0'         
     mov [edi], dl
     dec edi
     test eax, eax
     jnz .loop
 
 .done:
-    inc edi             ; Point to start of string
+    inc edi             
     mov esi, edi
     mov edi, conversion_buffer
 .copy:
