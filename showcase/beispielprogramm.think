@@ -9,15 +9,15 @@ char symbol = 'c'
 int[5] feld = [1, 2, 3, 4, 5]
 str[10] namen = ["Michael", "Gottfried", "Heinz"]
 
-int summe = feld[3] + feld[2]
+int summe = feld[zahl/2] + feld[2]
 
 feld[2] = -5
 
 # Operationen
-int mathe = 5 / 4 + 3 + 2 - 1
+int mathe = 5 / 4 + 3 * 2 - 1
 int klammern = ((((((((1+1))) / 10)))))
 
-bool logisch = True || False && (1 < 2)
+bool logisch = True || False && (1 < 2) && (1 == 2)
 
 # Funktionen & Typcasting
 

@@ -6,6 +6,6 @@ int a = 5
 # falscher typ
 float b = a
 
-while (a) {}
+while (a > 0) {}
 
 print(nicht_definiert)
