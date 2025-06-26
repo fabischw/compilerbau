@@ -52,8 +52,17 @@ generate_assembly_(T_Node* root)
   switch(root->ast_type)
   {
     case ast_statement:
+      if(root != NULL && !t_is_node_empty(root))
+      {
+      if(root->rightNode != NULL)
+      {
       generate_assembly_(root->rightNode);
+      }
+      if(root->leftNode != NULL)
+      {
       generate_assembly_(root->leftNode);
+      }
+      }
       break;
     case ast_variable_declaration:
     case ast_variable_declaration_const:
@@ -81,7 +90,10 @@ generate_assembly(T_Node* root)
   const char* includes = "format elf64 executable\n\n\
 include \"../src/asmlib/definitions.asm\"\ninclude \
 \"../src/asmlib/functions.asm\"\ninclude \"../src/asmlib/structures.asm\"\n";
+  if(root != NULL && !t_is_node_empty(root))
+  {
   generate_assembly_(root);  
+  }
 
   FILE* fp = fopen("build/main.asm", "w");
   if(fp)
@@ -97,13 +109,11 @@ void
 create_function_call(T_Node* function_node)
 {
   char* fn_id = function_node->leftNode->value;  
-  // TODO: parse args?
   if(!strcmp(fn_id, "exit"))
   {
   sprintf(buffer+strlen(buffer), "%s %d\n", fn_id, 0);  
   } else if(!strcmp(fn_id, "print"))
   {
-  //TODO: check type ?!
   T_Node* params = function_node->rightNode;
   char* arg_buf = params->leftNode->value;
   if(!t_is_node_empty(params->leftNode))
@@ -171,12 +181,6 @@ create_if_clause(T_Node* if_node)
 {
   T_Node* if_content = if_node->leftNode;
   T_Node* if_else = if_node->rightNode;
-  // TODO: add <>= in logicalexpr
-
-  //const char* operator = parse_operator(if_content->leftNode->value, 0);
-  //char* left_side = if_content->leftNode->leftNode->value;
-  //char* right_side = if_content->leftNode->rightNode->value;
-  // 
   char* left_side;
   if(t_is_node_empty(if_content->leftNode))
   {
@@ -216,9 +220,6 @@ create_if_clause(T_Node* if_node)
 char*
 solve_logical_expression(T_Node* logical_expr_root)
 {
-  //TODO: add operator with negation
-    // !!!
-  // see parse_operator
   char* left_id;
   char* right_id;
   char* curr_reg = register_to_string(free_register);
@@ -335,8 +336,7 @@ solve_arithmetic_expression(T_Node* arith_expr_root)
   }
   else if(!strcmp(arith_expr_root->value, "*"))
   {
-    //
-    // 
+    sprintf(buffer+strlen(buffer), "mov %s, 1\nimul %s, %s\n imul %s, %s\n", curr_reg, curr_reg, left_id, curr_reg, right_id);
   }
   else if(!strcmp(arith_expr_root->value, "/"))
   {
@@ -382,7 +382,6 @@ create_var_declaration(T_Node* declaration_node)
   } else {
     switch(declaration_node->rightNode->rightNode->ast_type)
     {
-      // TODO: add more expressions!
       case ast_arithmetic_expression:
         value = solve_arithmetic_expression(declaration_node->rightNode->rightNode);
         break;
