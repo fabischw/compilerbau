@@ -33,6 +33,7 @@ int 0x80
 macro tostr eax_input {
 
     mov eax, eax_input   ; Load the integer to convert
+    imul eax, 10
     mov edi, conversion_buffer + 11  ; Point to end of buffer
     mov byte [edi], 0    ; Null terminator
     dec edi

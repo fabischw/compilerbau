@@ -18,5 +18,4 @@ comparator .exit
 call body
 jmp .loop
 .exit:
-; invert comparator ???
 }
