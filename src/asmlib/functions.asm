@@ -31,43 +31,45 @@ int 0x80
 
 
 macro tostr int {
+local .convert, .loop, .done, .copy
 
-    mov eax, int 
-    imul eax, 10
-    mov edi, conversion_buffer + 11
-    mov byte [edi], 0    
-    dec edi
+mov eax, int 
+imul eax, 10
+mov edi, conversion_buffer + 11
 
-    test eax, eax
-    jnz .convert
-    mov byte [edi], '0'
-    dec edi
-    jmp .done
+mov byte [edi], 0    
+dec edi
+
+test eax, eax
+jnz .convert
+mov byte [edi], '0'
+dec edi
+jmp .done
 
 .convert:
-    xor edx, edx
-    mov ebx, 10
+xor edx, edx
+mov ebx, 10
 
 .loop:
-    xor edx, edx
-    div ebx             
-    add dl, '0'         
-    mov [edi], dl
-    dec edi
-    test eax, eax
-    jnz .loop
+xor edx, edx
+div ebx             
+add dl, '0'         
+mov [edi], dl
+dec edi
+test eax, eax
+jnz .loop
 
 .done:
-    inc edi             
-    mov esi, edi
-    mov edi, conversion_buffer
+inc edi             
+mov esi, edi
+mov edi, conversion_buffer
 .copy:
-    mov al, [esi]
-    mov [edi], al
-    inc esi
-    inc edi
-    test al, al
-    jnz .copy
+mov al, [esi]
+mov [edi], al
+inc esi
+inc edi
+test al, al
+jnz .copy
 }
 
 
