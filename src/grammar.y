@@ -272,8 +272,14 @@ T_Node* ast_node(AstType ast_type, char *value, T_Node* left, T_Node* right) {
 int
 main(int argc, char** argv)
 {
-    if(argc == 2)
+    if(argc >= 2)
     {
+        // arg parsing 
+        bool perform_codegen = false;
+        if (argc == 3) {
+            perform_codegen = (strcmp(argv[2], "--codegen") == 0);
+        }
+
         extern int yydebug;
         yydebug = 0;
         yyin = fopen(argv[1], "r");
@@ -310,7 +316,7 @@ main(int argc, char** argv)
         ll_print_linked_list(symbol_table);
 
         printf("\n--- Performing code generation ---\n");
-        generate_assembly(root);
+        if (perform_codegen) generate_assembly(root);
 
         printf("\nThinking was successful.");
     }
